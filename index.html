@@ -106,7 +106,6 @@ nav button.active{color:#2563eb}
 <div id="ranking"></div>
 </section>
 
-
 <section id="objectsScreen" class="screen">
 <div class="row">
 <h1>Objekty</h1>
@@ -121,7 +120,6 @@ nav button.active{color:#2563eb}
 <input id="objectSearch" placeholder="🔎 Hledat objekt..." oninput="renderObjects()">
 <div id="objectsList"></div>
 </section>
-
 
 <section id="stockScreen" class="screen">
 
@@ -161,7 +159,6 @@ nav button.active{color:#2563eb}
 
 </section>
 
-
 <section id="reportsScreen" class="screen">
 <h1>Dokumentace</h1>
 <div class="card">
@@ -174,7 +171,6 @@ nav button.active{color:#2563eb}
 <p class="muted">AI z údajů zařízení, checklistu, závad a poznámek připraví hotový zápis z kontroly.</p>
 </div>
 </section>
-
 
 <section id="controlsScreen" class="screen">
 
@@ -233,7 +229,6 @@ nav button.active{color:#2563eb}
 
 </section>
 
-
 <section id="moreScreen" class="screen">
 
 <h1>Více</h1>
@@ -265,7 +260,6 @@ nav button.active{color:#2563eb}
 
 </section>
 
-
 <section id="statsScreen" class="screen">
 
 <h1>📊 Statistiky</h1>
@@ -289,7 +283,6 @@ nav button.active{color:#2563eb}
 
 </main>
 
-
 <nav>
 <button class="active" onclick="show('dashboard',this)">🏠<br>Přehled</button>
 <button onclick="show('objectsScreen',this)">🏢<br>Objekty</button>
@@ -303,13 +296,11 @@ nav button.active{color:#2563eb}
 <div id="sheet" class="sheet"></div>
 </div>
 
-
 <script>
 
 const KEY="pozarnik_ai_v04";
 let currentYear=2027;
 let activeCustomer="ALL";
-
 
 function demoData(){
 
@@ -460,7 +451,6 @@ yearPlans:{}
 
 }
 
-
 let data;
 
 try{
@@ -476,9 +466,6 @@ data.stock=data.stock||[];
 data.yearPlans=data.yearPlans||{};
 data.customers=data.customers||[];
 data.objects=data.objects||[];
-
-
-/* MIGRACE STARÉ ÚDRŽBY */
 
 function migrateOldMaintenance(){
 
@@ -505,11 +492,9 @@ data.maintenance=[];
 
 }
 
-
 function today(){
 return new Date().toISOString().slice(0,10);
 }
-
 
 function makeStockRecord(d,o,status){
 
@@ -544,15 +529,12 @@ retiredReason:d.retiredReason||""
 
 }
 
-
 migrateOldMaintenance();
-
 
 function save(){
 localStorage.setItem(KEY,JSON.stringify(data));
 render();
 }
-
 
 function allDevices(){
 
@@ -562,13 +544,11 @@ o=>o.devices.map(d=>({...d,object:o}))
 
 }
 
-
 function customerName(id){
 
 return data.customers.find(c=>c.id===id)?.name||"Bez zákazníka";
 
 }
-
 
 function typeName(type){
 
@@ -581,7 +561,6 @@ return"Zařízení";
 
 }
 
-
 function daysUntil(date){
 
 if(!date)return 99999;
@@ -592,9 +571,6 @@ new Date(new Date().toDateString()))/86400000
 );
 
 }
-
-
-/* AUTOMATICKÉ VYŘAZENÍ */
 
 function autoRetireExpired(){
 
@@ -636,7 +612,6 @@ changed=true;
 
 });
 
-
 data.stock.forEach(x=>{
 
 if(
@@ -665,14 +640,10 @@ changed=true;
 
 });
 
-
 if(changed)
 localStorage.setItem(KEY,JSON.stringify(data));
 
 }
-
-
-/* STAV */
 
 function status(device){
 
@@ -686,7 +657,6 @@ return"ok";
 
 }
 
-
 function statusText(s){
 
 if(s==="fault")return"ZÁVADA";
@@ -696,7 +666,6 @@ if(s==="warning")return"MUSÍ NA ÚDRŽBU";
 return"V POŘÁDKU";
 
 }
-
 
 function objectStatus(object){
 
@@ -712,9 +681,6 @@ return{type:"warning",text:"MUSÍ NA ÚDRŽBU"};
 return{type:"ok",text:"V POŘÁDKU"};
 
 }
-
-
-/* NAVIGACE */
 
 function show(id,button){
 
@@ -736,9 +702,6 @@ button.classList.add("active");
 render();
 
 }
-
-
-/* RENDER */
 
 function render(){
 
@@ -778,9 +741,6 @@ renderStats();
 
 }
 
-
-/* POZORNOST */
-
 function renderAttention(){
 
 let list=[];
@@ -803,11 +763,8 @@ list.push({d,type:"life"});
 
 });
 
-
 attention.innerHTML=list.length
-
 ?
-
 list.slice(0,10).map(x=>
 
 x.type==="test"
@@ -844,9 +801,6 @@ ${x.d.life} • ${x.d.object.name}
 
 }
 
-
-/* RANKING */
-
 function renderRanking(){
 
 const list=data.objects.map(o=>({
@@ -859,9 +813,7 @@ count:o.devices.reduce(
 .sort((a,b)=>b.count-a.count);
 
 ranking.innerHTML=list.length
-
 ?
-
 list.slice(0,8).map((x,i)=>`
 
 <div class="card">
@@ -880,9 +832,6 @@ Zatím žádné závady.
 </div>`;
 
 }
-
-
-/* OBJEKTY */
 
 function renderObjects(){
 
@@ -951,9 +900,6 @@ OTEVŘÍT
 
 }
 
-
-/* ZÁKAZNÍCI */
-
 function renderCustomers(){
 
 customerFilter.innerHTML=`
@@ -1007,9 +953,6 @@ ${devices} zařízení
 
 }
 
-
-/* DETAIL OBJEKTU */
-
 function openObject(id){
 
 const object=data.objects.find(o=>o.id===id);
@@ -1059,9 +1002,6 @@ Zavřít
 openModal(html);
 
 }
-
-
-/* KARTA ZAŘÍZENÍ */
 
 function deviceCard(d,o){
 
@@ -1115,9 +1055,6 @@ DETAIL
 </div>`;
 
 }
-
-
-/* DETAIL ZAŘÍZENÍ */
 
 function openDevice(oid,did){
 
@@ -1278,9 +1215,6 @@ Zavřít
 
 }
 
-
-/* KONTROLA */
-
 const extinguisher=[
 "Vnější stav přístroje",
 "Tlak / indikace",
@@ -1310,7 +1244,6 @@ const faults=[
 "Špatně přístupný",
 "Jiná závada"
 ];
-
 
 function openCheck(oid,did){
 
@@ -1345,7 +1278,6 @@ html+=`
 </label>`;
 
 });
-
 
 html+=`
 
@@ -1388,7 +1320,6 @@ Zrušit
 openModal(html);
 
 }
-
 
 function finishCheck(oid,did){
 
@@ -1453,9 +1384,6 @@ alert("Kontrola uložena.");
 
 }
 
-
-/* ZÁVADA */
-
 function reportFault(oid,did){
 
 openModal(`
@@ -1503,7 +1431,6 @@ Zrušit
 
 }
 
-
 function saveFault(oid,did){
 
 const o=data.objects.find(x=>x.id===oid);
@@ -1533,9 +1460,6 @@ save();
 alert("Závada uložena.");
 
 }
-
-
-/* PŘESUN DO SKLADU / ÚDRŽBY */
 
 function moveObjectToStock(
 oid,
@@ -1604,9 +1528,6 @@ save();
 
 }
 
-
-/* ÚDRŽBA */
-
 function sendMaintenance(oid,did){
 
 const x=
@@ -1634,9 +1555,6 @@ alert(
 
 }
 
-
-/* SKLAD */
-
 function renderStock(){
 
 const stock=
@@ -1661,7 +1579,6 @@ maintenance.length+" ks";
 retiredBadge.textContent=
 retired.length+" ks";
 
-
 stockList.innerHTML=stock.length
 ?
 stock.map(stockCard).join("")
@@ -1669,7 +1586,6 @@ stock.map(stockCard).join("")
 `<div class="muted">
 Na skladě není žádný hasičák.
 </div>`;
-
 
 maintenanceList.innerHTML=
 maintenance.length
@@ -1679,7 +1595,6 @@ maintenance.map(stockCard).join("")
 `<div class="muted">
 Momentálně není žádný hasičák na údržbě.
 </div>`;
-
 
 retiredList.innerHTML=
 retired.length
@@ -1691,9 +1606,6 @@ Zatím není nic vyřazené.
 </div>`;
 
 }
-
-
-/* KARTA SKLADU */
 
 function stockCard(x){
 
@@ -1789,9 +1701,6 @@ onclick="retireStock('${x.id}')">
 
 }
 
-
-/* VYŘAZENÉ */
-
 function retiredCard(x){
 
 return`
@@ -1850,6 +1759,11 @@ onclick="restoreRetired('${x.id}')">
 ♻️ Obnovit
 </button>
 
+<button class="green"
+onclick="restoreRetiredToStock('${x.id}')">
+📦 Vrátit na sklad
+</button>
+
 <button class="red"
 onclick="deleteRetired('${x.id}')">
 🗑️ Trvale smazat
@@ -1861,15 +1775,11 @@ onclick="deleteRetired('${x.id}')">
 
 }
 
-
-/* DETAIL SKLADU */
-
 function stockDetail(id){
 
 const x=data.stock.find(x=>x.id===id);
 
 if(!x)return;
-
 
 if(x.status==="retired"){
 
@@ -1952,10 +1862,8 @@ return;
 
 }
 
-
 const maintenance=
 x.status==="maintenance";
-
 
 openModal(`
 
@@ -2065,9 +1973,6 @@ Zavřít
 
 }
 
-
-/* ÚDRŽBA → SKLAD */
-
 function stockToStock(id){
 
 const x=data.stock.find(x=>x.id===id);
@@ -2104,9 +2009,6 @@ alert(
 
 }
 
-
-/* ÚDRŽBA ZE SKLADU */
-
 function stockMaintenance(id){
 
 const x=data.stock.find(x=>x.id===id);
@@ -2131,9 +2033,6 @@ alert(
 );
 
 }
-
-
-/* VÝBĚR OBJEKTU PRO NÁVRAT */
 
 function returnStock(id){
 
@@ -2283,9 +2182,6 @@ Zrušit
 
 }
 
-
-/* PŘIŘAZENÍ ZE SKLADU DO OBJEKTU */
-
 function assignStock(
 stockId,
 objectId,
@@ -2364,9 +2260,6 @@ openObject(o.id);
 
 }
 
-
-/* VYŘAZENÍ ZE SKLADU */
-
 function retireStock(id){
 
 const x=
@@ -2414,7 +2307,6 @@ Zrušit
 
 }
 
-
 function saveRetireStock(id){
 
 const x=
@@ -2451,9 +2343,6 @@ alert(
 );
 
 }
-
-
-/* VYŘAZENÍ PŘÍMO Z OBJEKTU / QR */
 
 function retireObjectDevice(oid,did){
 
@@ -2530,7 +2419,6 @@ Zrušit
 
 }
 
-
 function saveRetireObjectDevice(oid,did){
 
 const o=
@@ -2583,9 +2471,6 @@ alert(
 );
 
 }
-
-
-/* VYŘAZENÍ ZE SYSTÉMU – TRVALE */
 
 function deleteRetired(id){
 
@@ -2649,7 +2534,6 @@ Zrušit
 
 }
 
-
 function confirmDeleteRetired(id){
 
 const confirmText=
@@ -2679,9 +2563,6 @@ alert(
 
 }
 
-
-/* OBNOVENÍ VYŘAZENÉHO */
-
 function restoreRetired(id){
 
 const x=
@@ -2692,9 +2573,6 @@ if(!x)return;
 returnStock(id);
 
 }
-
-
-/* OBNOVENÍ VYŘAZENÉHO → SKLAD */
 
 function restoreRetiredToStock(id){
 
@@ -2721,9 +2599,6 @@ save();
 alert("Hasičák byl vrácen na sklad.");
 
 }
-
-
-/* PŘIDÁNÍ NA SKLAD */
 
 function addStock(){
 
@@ -2805,9 +2680,6 @@ data.stock.push(d);
 save();
 
 }
-
-
-/* QR */
 
 function scanQR(){
 
@@ -2898,9 +2770,6 @@ Zrušit
 
 }
 
-
-/* NOVÝ QR → SKLAD */
-
 function newQRStock(id){
 
 if(
@@ -2962,9 +2831,6 @@ closeModal();
 save();
 
 }
-
-
-/* NOVÝ QR → OBJEKT */
 
 function newQRObject(id){
 
@@ -3032,7 +2898,6 @@ onclick="saveQRObject('${id}')">
 
 }
 
-
 function saveQRObject(id){
 
 const o=
@@ -3086,9 +2951,6 @@ save();
 
 }
 
-
-/* QR ZOBRAZENÍ */
-
 function showQR(oid,did){
 
 const o=
@@ -3133,7 +2995,6 @@ Zavřít
 
 }
 
-
 function showStockQR(id){
 
 const x=
@@ -3169,9 +3030,6 @@ Zavřít
 
 }
 
-
-/* PLÁN */
-
 function getPlan(year){
 
 if(!data.yearPlans[year]){
@@ -3186,7 +3044,6 @@ return data.yearPlans[year];
 
 }
 
-
 function getCampaign(id,year){
 
 const plan=
@@ -3199,7 +3056,6 @@ return plan.octoberObjects.includes(id)
 "APRIL";
 
 }
-
 
 function objectDone(o,year){
 
@@ -3216,7 +3072,6 @@ d.planCampaign===campaign
 
 }
 
-
 function changeYear(x){
 
 currentYear=
@@ -3228,7 +3083,6 @@ currentYear+x
 render();
 
 }
-
 
 function renderPlan(){
 
@@ -3316,7 +3170,6 @@ objectDone(o,currentYear)
 
 `).join("");
 
-
 octoberPlan.innerHTML=
 oct.length===2
 
@@ -3357,9 +3210,6 @@ objectDone(o,currentYear)
 </div>`;
 
 }
-
-
-/* ŘÍJEN */
 
 function selectOctober(){
 
@@ -3405,7 +3255,6 @@ ${o.address}
 
 });
 
-
 html+=`
 
 <div class="actions">
@@ -3431,7 +3280,6 @@ Zrušit
 openModal(html);
 
 }
-
 
 function saveOctober(){
 
@@ -3459,9 +3307,6 @@ closeModal();
 save();
 
 }
-
-
-/* NOVÝ OBJEKT */
 
 function newObject(){
 
@@ -3503,7 +3348,6 @@ onclick="saveNewObject()">
 
 }
 
-
 function saveNewObject(){
 
 const name=
@@ -3541,9 +3385,6 @@ closeModal();
 save();
 
 }
-
-
-/* NOVÉ ZAŘÍZENÍ */
 
 function newDevice(oid){
 
@@ -3609,7 +3450,6 @@ onclick="saveNewDevice('${oid}')">
 
 }
 
-
 function saveNewDevice(oid){
 
 const o=
@@ -3670,9 +3510,6 @@ openObject(oid);
 
 }
 
-
-/* STATISTIKY */
-
 function renderStats(){
 
 const os=
@@ -3689,7 +3526,6 @@ o.devices.reduce(
 }))
 .filter(x=>x.faults)
 .sort((a,b)=>b.faults-a.faults);
-
 
 statsObjects.innerHTML=
 os.length
@@ -3714,7 +3550,6 @@ os.map(x=>`
 Zatím žádné závady.
 </p>`;
 
-
 const f={};
 
 allDevices().forEach(d=>{
@@ -3724,7 +3559,6 @@ f[x]=(f[x]||0)+1
 );
 
 });
-
 
 statsFaults.innerHTML=
 Object.entries(f)
@@ -3747,7 +3581,6 @@ Object.entries(f)
 Zatím žádné závady.
 </p>`;
 
-
 const s={};
 
 allDevices().forEach(d=>{
@@ -3758,7 +3591,6 @@ statusText(status(d));
 s[x]=(s[x]||0)+1;
 
 });
-
 
 statsStatus.innerHTML=
 Object.entries(s)
@@ -3775,9 +3607,6 @@ Object.entries(s)
 `).join("");
 
 }
-
-
-/* ZÁLOHA */
 
 function exportData(){
 
@@ -3803,7 +3632,6 @@ a.download=
 a.click();
 
 }
-
 
 function importData(event){
 
@@ -3864,9 +3692,6 @@ reader.readAsText(file);
 
 }
 
-
-/* OBNOVIT DATA */
-
 function resetDemo(){
 
 if(
@@ -3894,9 +3719,6 @@ alert(
 
 }
 
-
-/* MODAL */
-
 function openModal(html){
 
 document.getElementById("sheet")
@@ -3907,16 +3729,12 @@ document.getElementById("modal")
 
 }
 
-
 function closeModal(){
 
 document.getElementById("modal")
 .classList.remove("open");
 
 }
-
-
-/* START */
 
 render();
 
