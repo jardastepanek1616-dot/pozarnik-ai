@@ -57,7 +57,7 @@ nav button.active{color:#2563eb}
 <header>
 <div class="header">
 <div class="logo">🧯 Požárník AI</div>
-<div class="version">V0.5</div>
+<div class="version">V0.6</div>
 </div>
 </header>
 
@@ -408,8 +408,7 @@ if(!d)return;
 data.stock.push(makeStockRecord(
 d,
 o,
-"maintenance",
-m.sentDate||today()
+"maintenance"
 ));
 
 o.devices=o.devices.filter(x=>x.id!==d.id);
@@ -1074,7 +1073,7 @@ alert("Závada uložena.");
 }
 
 
-/* SPOLEČNÝ PŘESUN DO SKLADU */
+/* PŘESUN DO SKLADU / ÚDRŽBY */
 
 function moveObjectToStock(oid,did,status="stock"){
 
@@ -1194,8 +1193,12 @@ ${maintenance?"NA ÚDRŽBĚ":"NA SKLADĚ"}
 
 <button class="light" onclick="stockDetail('${x.id}')">DETAIL</button>
 
+<button class="green" onclick="returnStock('${x.id}')">
+🏢 Vrátit do objektu
+</button>
+
 ${maintenance
-?`<button class="green" onclick="returnStock('${x.id}')">↩️ Vrátit do objektu</button>`
+?``
 :`<button class="orange" onclick="stockMaintenance('${x.id}')">🔧 Poslat na údržbu</button>`}
 
 </div>
@@ -1308,8 +1311,12 @@ QR ID: <b>${x.qrId||x.id}</b>
 
 <div class="actions">
 
+<button class="green" onclick="returnStock('${x.id}')">
+🏢 Vrátit do objektu
+</button>
+
 ${maintenance
-?`<button class="green" onclick="returnStock('${x.id}')">↩️ Vrátit do objektu</button>`
+?``
 :`<button class="orange" onclick="stockMaintenance('${x.id}')">🔧 Poslat na údržbu</button>`}
 
 <button class="light" onclick="showStockQR('${x.id}')">▣ QR</button>
@@ -1359,16 +1366,26 @@ openModal(`
 <h2>↩️ Vrátit hasičák do objektu</h2>
 
 <div class="card">
+
+<div class="row">
+<div>
 <b>🧯 ${x.id}</b>
 <div class="muted">${typeName(x.type)}</div>
+</div>
+
+<span class="badge ${x.status==="maintenance"?"warning":"ok"}">
+${x.status==="maintenance"?"NA ÚDRŽBĚ":"NA SKLADĚ"}
+</span>
+</div>
+
 <br>
 
 ${original
 ?`
 <div class="alert good">
 <b>Původní místo:</b><br>
-${original.name}<br>
-${x.originalLocation||"Umístění neuvedeno"}
+🏢 ${original.name}<br>
+📍 ${x.originalLocation||"Umístění neuvedeno"}
 </div>
 
 <button class="green" style="width:100%" onclick="assignStock('${id}','${original.id}',document.getElementById('returnLocation').value)">
@@ -1379,6 +1396,8 @@ ${x.originalLocation||"Umístění neuvedeno"}
 }
 
 </div>
+
+<h3>📍 Nebo přiřadit ručně</h3>
 
 <label>Objekt</label>
 
@@ -1397,8 +1416,8 @@ placeholder="3. patro – chodba">
 
 <div class="actions">
 
-<button class="primary" onclick="assignStock('${id}',document.getElementById('returnObject').value,document.getElementById('returnLocation').value)">
-🏢 Přiřadit podle výběru
+<button class="primary" style="width:100%" onclick="assignStock('${id}',document.getElementById('returnObject').value,document.getElementById('returnLocation').value)">
+🏢 Přiřadit do vybraného objektu
 </button>
 
 <button class="gray" onclick="closeModal()">Zrušit</button>
