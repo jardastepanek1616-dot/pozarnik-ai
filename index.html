@@ -60,6 +60,90 @@ nav button.active{color:#2563eb}
 .qr{width:190px;height:190px;border:8px solid #111827;margin:20px auto;display:flex;align-items:center;justify-content:center;font-size:85px}
 .history-photo{width:100%;max-width:320px;border-radius:12px;margin-top:8px;border:1px solid #e5e7eb}
 .photo-preview{width:100%;max-height:240px;object-fit:cover;border-radius:12px;margin:5px 0 10px}
+
+/* PROTOKOL */
+.report-editor{
+background:white;
+border:1px solid #d1d5db;
+border-radius:14px;
+padding:20px;
+min-height:300px;
+outline:none;
+line-height:1.55;
+}
+.report-editor:focus{
+border-color:#2563eb;
+box-shadow:0 0 0 2px #2563eb22;
+}
+.report-editor h1{
+font-size:22px;
+text-align:center;
+margin:0 0 20px;
+}
+.report-editor h2{
+font-size:17px;
+border-bottom:1px solid #ddd;
+padding-bottom:6px;
+margin-top:22px;
+}
+.report-table{
+width:100%;
+border-collapse:collapse;
+margin:10px 0 18px;
+font-size:12px;
+}
+.report-table th,
+.report-table td{
+border:1px solid #d1d5db;
+padding:7px;
+vertical-align:top;
+}
+.report-table th{
+background:#f3f4f6;
+font-weight:800;
+}
+.report-photo{
+max-width:100%;
+width:auto;
+max-height:360px;
+display:block;
+border-radius:8px;
+border:1px solid #ddd;
+margin:8px 0 16px;
+}
+.report-sign{
+margin-top:35px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:40px;
+}
+.report-sign-box{
+border-top:1px solid #111;
+padding-top:7px;
+min-height:50px;
+}
+.report-warning{
+background:#fff7ed;
+border:1px solid #fed7aa;
+color:#9a3412;
+padding:12px;
+border-radius:12px;
+font-size:12px;
+margin:10px 0;
+}
+
+@media print{
+body{background:white}
+header,nav,.no-print{display:none!important}
+main{padding:0;max-width:none}
+.screen{display:none!important}
+#reportsScreen{display:block!important}
+.card{box-shadow:none;border:0}
+.report-editor{
+border:0;
+padding:0;
+}
+}
 </style>
 </head>
 
@@ -68,7 +152,7 @@ nav button.active{color:#2563eb}
 <header>
 <div class="header">
 <div class="logo">🧯 Požárník AI</div>
-<div class="version">V0.9</div>
+<div class="version">V1.0</div>
 </div>
 </header>
 
@@ -162,16 +246,32 @@ nav button.active{color:#2563eb}
 </section>
 
 <section id="reportsScreen" class="screen">
-<h1>Dokumentace</h1>
+
+<h1>📄 Dokumentace</h1>
+
 <div class="card">
 <b>📄 Kontrolní zprávy</b>
-<p class="muted">Po dokončení kontroly se zde budou ukládat zprávy.</p>
+<p class="muted">
+Zde se ukládají vytvořené protokoly z kontrol.
+Protokol lze po automatickém sestavení ručně upravit.
+</p>
 </div>
 
 <div class="card">
-<b>🤖 AI zprávy</b>
-<p class="muted">AI z údajů zařízení, checklistu, závad a poznámek připraví hotový zápis z kontroly.</p>
+<b>🤖 Návrh protokolu</b>
+<p class="muted">
+Aplikace sestaví protokol podle skutečných zařízení, provedených kontrol,
+závad, poznámek a fotografií.
+</p>
+
+<button class="primary" onclick="chooseReportObject()">
+📄 Vytvořit protokol
+</button>
 </div>
+
+<h2>📚 Uložené protokoly</h2>
+<div id="reportsList"></div>
+
 </section>
 
 <section id="controlsScreen" class="screen">
@@ -448,7 +548,8 @@ originalLocation:"",
 maintenanceSent:"2026-10-01"
 }
 ],
-yearPlans:{}
+yearPlans:{},
+reports:[]
 };
 
 }
@@ -468,6 +569,7 @@ data.stock=data.stock||[];
 data.yearPlans=data.yearPlans||{};
 data.customers=data.customers||[];
 data.objects=data.objects||[];
+data.reports=data.reports||[];
 
 function migrateOldMaintenance(){
 
@@ -496,6 +598,17 @@ data.maintenance=[];
 
 function today(){
 return new Date().toISOString().slice(0,10);
+}
+
+function escapeHtml(value){
+
+return String(value??"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
 }
 
 function makeStockRecord(d,o,status){
@@ -740,6 +853,7 @@ renderStock();
 renderPlan();
 renderCustomers();
 renderStats();
+renderReports();
 
 }
 
@@ -750,6 +864,7 @@ let list=[];
 allDevices().forEach(d=>{
 
 if(
+d.type!=="HYDRANT" &&
 d.periodicTest &&
 daysUntil(d.periodicTest)>=0 &&
 daysUntil(d.periodicTest)<=90
@@ -757,6 +872,7 @@ daysUntil(d.periodicTest)<=90
 list.push({d,type:"test"});
 
 if(
+d.type!=="HYDRANT" &&
 d.life &&
 daysUntil(d.life)>=0 &&
 daysUntil(d.life)<=90
@@ -969,6 +1085,24 @@ ${object.address}
 
 <div class="big ${objectStatus(object).type}">
 ${objectStatus(object).text}
+</div>
+
+<div class="card">
+
+<div class="row">
+<div>
+<b>📄 Dokumentace</b>
+<div class="small">
+Vytvoř protokol z kontrol tohoto objektu.
+</div>
+</div>
+
+<button class="primary"
+onclick="openReportBuilder('${id}')">
+📄 Protokol
+</button>
+</div>
+
 </div>
 
 <h2>🧯 Zařízení</h2>`;
@@ -1249,8 +1383,6 @@ const faults=[
 "Jiná závada"
 ];
 
-/* Zmenší fotografii před uložením,
-   aby zbytečně nezabírala místo v localStorage. */
 function readPhoto(file){
 
 return new Promise((resolve,reject)=>{
@@ -2672,9 +2804,7 @@ onclick="confirmDeleteRetired('${id}')">
 <button
 class="gray"
 onclick="closeModal()">
-
 Zrušit
-
 </button>
 
 </div>
@@ -3757,6 +3887,1034 @@ Object.entries(s)
 
 }
 
+/* =========================================================
+   PROTOKOLY / DOKUMENTACE
+   ========================================================= */
+
+function chooseReportObject(){
+
+if(!data.objects.length){
+
+alert("Nejdříve musíš mít alespoň jeden objekt.");
+
+return;
+
+}
+
+let html=`
+
+<h2>📄 Vytvořit protokol</h2>
+
+<p class="muted">
+Vyber objekt, ze kterého chceš sestavit protokol.
+Aplikace vezme zařízení a jejich poslední zaznamenané kontroly.
+</p>
+
+<label>🏢 Objekt</label>
+
+<select id="reportObject">
+
+${data.objects.map(o=>`
+
+<option value="${o.id}">
+${o.name} — ${customerName(o.customerId)}
+</option>
+
+`).join("")}
+
+</select>
+
+<div class="actions">
+
+<button class="primary"
+onclick="openReportBuilder(
+document.getElementById('reportObject').value
+)">
+📄 Pokračovat
+</button>
+
+<button class="gray"
+onclick="closeModal()">
+Zrušit
+</button>
+
+</div>
+
+`;
+
+openModal(html);
+
+}
+
+function latestHistory(d){
+
+if(!Array.isArray(d.history)||!d.history.length)
+return null;
+
+return d.history
+.slice()
+.sort((a,b)=>
+String(b.date||"").localeCompare(
+String(a.date||"")
+)
+)[0];
+
+}
+
+function reportResult(d){
+
+const h=latestHistory(d);
+
+if(d.faults?.length)
+return"NEVYHOVUJE";
+
+if(h?.result==="Závada")
+return"NEVYHOVUJE";
+
+return"VYHOVUJE";
+
+}
+
+function reportPhoto(d){
+
+const h=latestHistory(d);
+
+if(h?.photo)
+return h.photo;
+
+return"";
+
+}
+
+function reportRemovalText(d){
+
+if(d.faults?.length)
+return"Odstranění závady bude řešeno dle zjištěného stavu, požadavků výrobce a dohodnutého termínu.";
+
+return"—";
+
+}
+
+function buildReportHtml(
+object,
+settings
+){
+
+const date=settings.date||today();
+
+const devices=object.devices||[];
+
+const customer=
+data.customers.find(
+c=>c.id===object.customerId
+);
+
+const ownerName=
+settings.ownerName||
+customer?.name||
+"";
+
+let extinguisherRows="";
+let hydrantRows="";
+
+devices.forEach(d=>{
+
+const h=latestHistory(d);
+
+const result=reportResult(d);
+
+const faultsText=
+d.faults?.length
+?
+d.faults.join(", ")
+:
+"Bez zjištěné závady";
+
+const next=
+d.next||
+"—";
+
+const row=`
+
+<tr>
+
+<td>${escapeHtml(d.id)}</td>
+
+<td>${escapeHtml(d.location||"—")}</td>
+
+<td>${escapeHtml(typeName(d.type).replace(/^.{2}/,""))}</td>
+
+<td>${escapeHtml(d.maker||"—")}</td>
+
+<td>${escapeHtml(d.model||"—")}</td>
+
+<td>${escapeHtml(d.serial||"—")}</td>
+
+<td>${escapeHtml(h?.date||date)}</td>
+
+<td>${escapeHtml(result)}</td>
+
+<td>${escapeHtml(faultsText)}</td>
+
+<td>${escapeHtml(next)}</td>
+
+</tr>`;
+
+if(d.type==="HYDRANT")
+hydrantRows+=row;
+else
+extinguisherRows+=row;
+
+});
+
+let html=`
+
+<h1>DOKLAD O KONTROLE PROVOZUSCHOPNOSTI</h1>
+
+<p style="text-align:center">
+<strong>Požárník AI</strong>
+</p>
+
+<h2>1. Provozovatel / vlastník</h2>
+
+<table class="report-table">
+
+<tr>
+<th>Firma / jméno / název</th>
+<td>${escapeHtml(ownerName||"—")}</td>
+</tr>
+
+<tr>
+<th>IČO</th>
+<td>${escapeHtml(settings.ownerIco||"—")}</td>
+</tr>
+
+<tr>
+<th>Sídlo / místo podnikání / adresa</th>
+<td>${escapeHtml(settings.ownerAddress||"—")}</td>
+</tr>
+
+</table>
+
+<h2>2. Objekt</h2>
+
+<table class="report-table">
+
+<tr>
+<th>Název objektu</th>
+<td>${escapeHtml(object.name)}</td>
+</tr>
+
+<tr>
+<th>Adresa objektu</th>
+<td>${escapeHtml(object.address||"—")}</td>
+</tr>
+
+<tr>
+<th>Datum kontroly</th>
+<td>${escapeHtml(date)}</td>
+</tr>
+
+</table>
+
+<h2>3. Osoba provádějící kontrolu</h2>
+
+<table class="report-table">
+
+<tr>
+<th>Jméno a příjmení</th>
+<td>${escapeHtml(settings.inspectorName||"—")}</td>
+</tr>
+
+<tr>
+<th>Firma / název</th>
+<td>${escapeHtml(settings.inspectorCompany||"—")}</td>
+</tr>
+
+<tr>
+<th>IČO</th>
+<td>${escapeHtml(settings.inspectorIco||"—")}</td>
+</tr>
+
+<tr>
+<th>Sídlo / místo podnikání</th>
+<td>${escapeHtml(settings.inspectorAddress||"—")}</td>
+</tr>
+
+</table>
+
+<h2>4. Rozsah kontroly</h2>
+
+<p>
+Kontrola byla provedena v rozsahu odpovídajícím druhu kontrolovaného zařízení,
+příslušným požadavkům, průvodní dokumentaci výrobce a evidenci zařízení.
+</p>
+`;
+
+if(extinguisherRows){
+
+html+=`
+
+<h2>5. Hasicí přístroje</h2>
+
+<table class="report-table">
+
+<thead>
+
+<tr>
+<th>ID</th>
+<th>Umístění</th>
+<th>Druh</th>
+<th>Výrobce</th>
+<th>Typ</th>
+<th>Výrobní číslo</th>
+<th>Datum kontroly</th>
+<th>Výsledek</th>
+<th>Závady</th>
+<th>Příští kontrola</th>
+</tr>
+
+</thead>
+
+<tbody>
+${extinguisherRows}
+</tbody>
+
+</table>
+`;
+
+}
+
+if(hydrantRows){
+
+html+=`
+
+<h2>${extinguisherRows?"6":"5"}. Hydranty / požárně bezpečnostní zařízení</h2>
+
+<table class="report-table">
+
+<thead>
+
+<tr>
+<th>ID</th>
+<th>Umístění</th>
+<th>Druh</th>
+<th>Výrobce</th>
+<th>Typ</th>
+<th>Výrobní číslo</th>
+<th>Datum kontroly</th>
+<th>Výsledek</th>
+<th>Závady</th>
+<th>Příští kontrola</th>
+</tr>
+
+</thead>
+
+<tbody>
+${hydrantRows}
+</tbody>
+
+</table>
+`;
+
+}
+
+const hasFaults=
+devices.some(d=>d.faults?.length);
+
+html+=`
+
+<h2>7. Výsledek kontroly</h2>
+
+<div class="${
+hasFaults
+?
+"report-warning"
+:
+"alert good"
+}">
+
+<b>
+${
+hasFaults
+?
+"⚠️ Byly zjištěny závady."
+:
+"✅ Kontrolovaná zařízení byla shledána provozuschopnými."
+}
+</b>
+
+<br><br>
+
+${
+hasFaults
+?
+"U zjištěných závad je nutné zajistit jejich odstranění v souladu s požadavky výrobce a stanoveným termínem."
+:
+"Na základě provedené kontroly nebyly u kontrolovaných zařízení zjištěny závady bránící jejich provozu."
+}
+
+</div>
+
+<h2>8. Závady a jejich odstranění</h2>
+
+<table class="report-table">
+
+<thead>
+<tr>
+<th>Zařízení</th>
+<th>Závada</th>
+<th>Způsob / opatření</th>
+<th>Termín odstranění</th>
+</tr>
+</thead>
+
+<tbody>
+`;
+
+devices
+.filter(d=>d.faults?.length)
+.forEach(d=>{
+
+html+=`
+
+<tr>
+
+<td>${escapeHtml(d.id)}</td>
+
+<td>
+${escapeHtml(d.faults.join(", "))}
+${d.note
+?
+"<br><b>Poznámka:</b> "+escapeHtml(d.note)
+:
+""}
+</td>
+
+<td>
+${escapeHtml(
+settings.removalAction||
+reportRemovalText(d)
+)}
+</td>
+
+<td>
+${escapeHtml(
+settings.removalDeadline||
+"—"
+)}
+</td>
+
+</tr>
+
+`;
+
+});
+
+if(!hasFaults){
+
+html+=`
+
+<tr>
+<td colspan="4">
+Bez zjištěných závad.
+</td>
+</tr>
+
+`;
+
+}
+
+html+=`
+
+</tbody>
+
+</table>
+
+<h2>9. Termín příští kontroly</h2>
+
+<p>
+<strong>${escapeHtml(
+settings.nextDate||"—"
+)}</strong>
+</p>
+
+<h2>10. Fotodokumentace</h2>
+`;
+
+let photoCount=0;
+
+devices.forEach(d=>{
+
+const photo=reportPhoto(d);
+
+if(!photo)return;
+
+photoCount++;
+
+html+=`
+
+<div>
+
+<p>
+<strong>${escapeHtml(d.id)}</strong>
+—
+${escapeHtml(d.location||"Umístění neuvedeno")}
+</p>
+
+<img
+src="${photo}"
+class="report-photo"
+alt="Fotodokumentace zařízení ${escapeHtml(d.id)}"
+>
+
+</div>
+`;
+
+});
+
+if(!photoCount){
+
+html+=`
+<p class="muted">
+Fotodokumentace nebyla při této kontrole pořízena.
+</p>
+`;
+
+}
+
+html+=`
+
+<h2>11. Potvrzení o provedení kontroly</h2>
+
+<p>
+Potvrzuji provedení kontroly provozuschopnosti výše uvedených zařízení
+v uvedeném rozsahu.
+</p>
+
+<div class="report-sign">
+
+<div class="report-sign-box">
+
+<strong>
+${escapeHtml(settings.inspectorName||"Jméno kontrolující osoby")}
+</strong>
+
+<br>
+Osoba, která kontrolu provedla
+
+</div>
+
+<div class="report-sign-box">
+
+<strong>
+${escapeHtml(date)}
+</strong>
+
+<br>
+Datum
+
+</div>
+
+</div>
+
+<div style="margin-top:50px">
+
+<div class="report-sign-box">
+Podpis
+
+</div>
+
+</div>
+
+<p class="small" style="margin-top:30px">
+Dokument je vytvořen z evidence zařízení a záznamů provedených kontrol.
+Před použitím jako oficiální doklad je nutné ověřit správnost všech údajů,
+zejména identifikačních údajů provozovatele, kontrolující osoby a výsledků kontroly.
+</p>
+
+`;
+
+return html;
+
+}
+
+function openReportBuilder(oid){
+
+const object=
+data.objects.find(x=>x.id===oid);
+
+if(!object){
+
+alert("Objekt nebyl nalezen.");
+return;
+
+}
+
+const customer=
+data.customers.find(
+c=>c.id===object.customerId
+);
+
+const existing=
+data.reports
+.filter(r=>r.objectId===oid)
+.sort((a,b)=>
+String(b.date||"").localeCompare(
+String(a.date||"")
+)
+)[0];
+
+let html=`
+
+<h2>📄 Protokol — ${escapeHtml(object.name)}</h2>
+
+<div class="report-warning">
+<b>⚠️ Před uložením doplň skutečné identifikační údaje.</b><br>
+Protokol automaticky používá zařízení, jejich kontroly, závady a fotografie z evidence.
+</div>
+
+<h3>Údaje provozovatele / vlastníka</h3>
+
+<label>Firma / jméno / název</label>
+<input
+id="reportOwnerName"
+value="${escapeHtml(customer?.name||"")}"
+>
+
+<label>IČO</label>
+<input
+id="reportOwnerIco"
+placeholder="IČO"
+>
+
+<label>Sídlo / místo podnikání / adresa</label>
+<input
+id="reportOwnerAddress"
+placeholder="Adresa provozovatele"
+>
+
+<h3>Kontrolující osoba</h3>
+
+<label>Jméno a příjmení</label>
+<input
+id="reportInspectorName"
+placeholder="Jméno a příjmení"
+>
+
+<label>Firma / název</label>
+<input
+id="reportInspectorCompany"
+placeholder="Firma"
+>
+
+<label>IČO</label>
+<input
+id="reportInspectorIco"
+placeholder="IČO"
+>
+
+<label>Sídlo / místo podnikání</label>
+<input
+id="reportInspectorAddress"
+placeholder="Adresa firmy"
+>
+
+<h3>Datumy</h3>
+
+<label>Datum kontroly</label>
+
+<input
+id="reportDate"
+type="date"
+value="${existing?.date||today()}"
+>
+
+<label>Termín příští kontroly</label>
+
+<input
+id="reportNextDate"
+type="date"
+value="${existing?.nextDate||""}"
+>
+
+<h3>Závady</h3>
+
+<label>Způsob odstranění závad</label>
+
+<textarea
+id="reportRemovalAction"
+rows="3"
+placeholder="Např. výměna poškozené hadice, oprava nebo předání do údržby...">${existing?.removalAction||""}</textarea>
+
+<label>Termín odstranění závad</label>
+
+<input
+id="reportRemovalDeadline"
+type="date"
+value="${existing?.removalDeadline||""}"
+>
+
+<div class="actions">
+
+<button
+class="primary"
+onclick="generateEditableReport('${oid}')">
+🤖 Vytvořit návrh
+</button>
+
+<button
+class="gray"
+onclick="closeModal()">
+Zrušit
+</button>
+
+</div>
+
+`;
+
+openModal(html);
+
+}
+
+function generateEditableReport(oid){
+
+const object=
+data.objects.find(x=>x.id===oid);
+
+if(!object)return;
+
+const settings={
+ownerName:
+document.getElementById("reportOwnerName").value.trim(),
+
+ownerIco:
+document.getElementById("reportOwnerIco").value.trim(),
+
+ownerAddress:
+document.getElementById("reportOwnerAddress").value.trim(),
+
+inspectorName:
+document.getElementById("reportInspectorName").value.trim(),
+
+inspectorCompany:
+document.getElementById("reportInspectorCompany").value.trim(),
+
+inspectorIco:
+document.getElementById("reportInspectorIco").value.trim(),
+
+inspectorAddress:
+document.getElementById("reportInspectorAddress").value.trim(),
+
+date:
+document.getElementById("reportDate").value||today(),
+
+nextDate:
+document.getElementById("reportNextDate").value||"",
+
+removalAction:
+document.getElementById("reportRemovalAction").value.trim(),
+
+removalDeadline:
+document.getElementById("reportRemovalDeadline").value||""
+
+};
+
+if(!settings.ownerName){
+
+alert(
+"Doplň firmu / jméno / název provozovatele nebo vlastníka."
+);
+
+return;
+
+}
+
+if(!settings.inspectorName){
+
+alert(
+"Doplň jméno a příjmení osoby, která kontrolu provedla."
+);
+
+return;
+
+}
+
+const html=
+buildReportHtml(
+object,
+settings
+);
+
+openReportEditor(
+null,
+object,
+settings,
+html
+);
+
+}
+
+function openReportEditor(
+reportId,
+object,
+settings,
+html
+){
+
+openModal(`
+
+<h2>✏️ Upravit protokol</h2>
+
+<div class="alert good">
+Protokol můžeš libovolně upravit.
+Text i fotografie zůstanou součástí uloženého dokumentu.
+</div>
+
+<div
+id="reportEditor"
+class="report-editor"
+contenteditable="true"
+spellcheck="true"
+>
+${html}
+</div>
+
+<div class="actions no-print">
+
+<button
+class="green"
+onclick="saveReport(
+${reportId?`'${reportId}'`:"null"},
+'${object.id}',
+${JSON.stringify(settings).replace(/"/g,"&quot;")}
+)">
+💾 Uložit protokol
+</button>
+
+<button
+class="primary"
+onclick="printReport()">
+🖨️ Tisk / PDF
+</button>
+
+<button
+class="gray"
+onclick="closeModal()">
+Zavřít
+</button>
+
+</div>
+
+`);
+
+}
+
+function saveReport(
+reportId,
+objectId,
+settings
+){
+
+const editor=
+document.getElementById("reportEditor");
+
+if(!editor)return;
+
+const html=editor.innerHTML;
+
+const object=
+data.objects.find(x=>x.id===objectId);
+
+if(!object)return;
+
+const id=
+reportId||
+"REP-"+Date.now();
+
+const report={
+id,
+objectId,
+objectName:object.name,
+date:settings.date||today(),
+nextDate:settings.nextDate||"",
+settings,
+html
+};
+
+const index=
+data.reports.findIndex(x=>x.id===id);
+
+if(index===-1)
+data.reports.push(report);
+else
+data.reports[index]=report;
+
+closeModal();
+save();
+
+alert(
+"Protokol byl uložen."
+);
+
+show("reportsScreen");
+
+}
+
+function printReport(){
+
+const editor=
+document.getElementById("reportEditor");
+
+if(!editor)return;
+
+const oldTitle=document.title;
+
+document.title="Protokol — Požárník AI";
+
+window.print();
+
+document.title=oldTitle;
+
+}
+
+function editSavedReport(id){
+
+const report=
+data.reports.find(x=>x.id===id);
+
+if(!report)return;
+
+const object=
+data.objects.find(x=>x.id===report.objectId);
+
+if(!object)return;
+
+openReportEditor(
+report.id,
+object,
+report.settings||{
+date:report.date
+},
+report.html
+);
+
+}
+
+function deleteReport(id){
+
+if(!confirm(
+"Opravdu chceš tento protokol smazat?"
+))
+return;
+
+data.reports=
+data.reports.filter(x=>x.id!==id);
+
+save();
+
+}
+
+function renderReports(){
+
+if(!document.getElementById("reportsList"))
+return;
+
+if(!data.reports.length){
+
+reportsList.innerHTML=`
+
+<div class="card muted">
+Zatím není uložený žádný protokol.
+</div>
+
+`;
+
+return;
+
+}
+
+reportsList.innerHTML=
+data.reports
+.slice()
+.sort((a,b)=>
+String(b.date||"").localeCompare(
+String(a.date||"")
+)
+.map(r=>`
+
+<div class="card">
+
+<div class="row">
+
+<div>
+
+<b>📄 ${escapeHtml(r.objectName||"Protokol")}</b>
+
+<div class="small">
+Datum kontroly:
+${escapeHtml(r.date||"—")}
+</div>
+
+</div>
+
+<span class="badge ok">
+ULOŽENO
+</span>
+
+</div>
+
+<div class="actions">
+
+<button
+class="light"
+onclick="editSavedReport('${r.id}')">
+✏️ Upravit
+</button>
+
+<button
+class="primary"
+onclick="openSavedReport('${r.id}')">
+📄 Otevřít
+</button>
+
+<button
+class="red"
+onclick="deleteReport('${r.id}')">
+🗑️ Smazat
+</button>
+
+</div>
+
+</div>
+
+`).join("");
+
+}
+
+function openSavedReport(id){
+
+const report=
+data.reports.find(x=>x.id===id);
+
+if(!report)return;
+
+const object=
+data.objects.find(x=>x.id===report.objectId);
+
+if(!object)return;
+
+openReportEditor(
+report.id,
+object,
+report.settings||{
+date:report.date
+},
+report.html
+);
+
+}
+
 function exportData(){
 
 const blob=
@@ -3813,6 +4971,9 @@ data.customers||[];
 
 data.objects=
 data.objects||[];
+
+data.reports=
+data.reports||[];
 
 migrateOldMaintenance();
 
