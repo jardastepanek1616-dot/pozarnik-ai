@@ -60,18 +60,6 @@ nav button.active{color:#2563eb}
 .qr{width:190px;height:190px;border:8px solid #111827;margin:20px auto;display:flex;align-items:center;justify-content:center;font-size:85px}
 .history-photo{width:100%;max-width:320px;border-radius:12px;margin-top:8px;border:1px solid #e5e7eb}
 .photo-preview{width:100%;max-height:240px;object-fit:cover;border-radius:12px;margin:5px 0 10px}
-.report-editor{min-height:500px;background:white;border:1px solid #d1d5db;border-radius:12px;padding:18px;line-height:1.5}
-.report-editor:focus{outline:2px solid #2563eb}
-.report-photo{max-width:100%;max-height:420px;border-radius:12px;margin:10px 0}
-.report-meta{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:10px 0}
-@media print{
-body{background:white}
-header,nav,.no-print{display:none!important}
-main{padding:0;max-width:none}
-.screen{display:none!important}
-#reportsScreen{display:block!important}
-.report-editor{border:0;padding:0;min-height:0}
-}
 </style>
 </head>
 
@@ -80,7 +68,7 @@ main{padding:0;max-width:none}
 <header>
 <div class="header">
 <div class="logo">🧯 Požárník AI</div>
-<div class="version">V1.0.1</div>
+<div class="version">V0.9</div>
 </div>
 </header>
 
@@ -174,20 +162,16 @@ main{padding:0;max-width:none}
 </section>
 
 <section id="reportsScreen" class="screen">
-
-<div class="row">
-<h1>📄 Zprávy</h1>
+<h1>Dokumentace</h1>
+<div class="card">
+<b>📄 Kontrolní zprávy</b>
+<p class="muted">Po dokončení kontroly se zde budou ukládat zprávy.</p>
 </div>
 
 <div class="card">
-<b>📄 Kontrolní protokoly</b>
-<p class="muted">
-Zde se ukládají protokoly vytvořené po dokončení kontrol zařízení.
-</p>
+<b>🤖 AI zprávy</b>
+<p class="muted">AI z údajů zařízení, checklistu, závad a poznámek připraví hotový zápis z kontroly.</p>
 </div>
-
-<div id="reportsList"></div>
-
 </section>
 
 <section id="controlsScreen" class="screen">
@@ -319,7 +303,6 @@ Zde se ukládají protokoly vytvořené po dokončení kontrol zařízení.
 const KEY="pozarnik_ai_v04";
 let currentYear=2027;
 let activeCustomer="ALL";
-let lastCompletedCheck=null;
 
 function demoData(){
 
@@ -465,8 +448,7 @@ originalLocation:"",
 maintenanceSent:"2026-10-01"
 }
 ],
-yearPlans:{},
-reports:[]
+yearPlans:{}
 };
 
 }
@@ -486,7 +468,6 @@ data.stock=data.stock||[];
 data.yearPlans=data.yearPlans||{};
 data.customers=data.customers||[];
 data.objects=data.objects||[];
-data.reports=data.reports||[];
 
 function migrateOldMaintenance(){
 
@@ -515,17 +496,6 @@ data.maintenance=[];
 
 function today(){
 return new Date().toISOString().slice(0,10);
-}
-
-function escapeHtml(value){
-
-return String(value??"")
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
-
 }
 
 function makeStockRecord(d,o,status){
@@ -767,7 +737,6 @@ renderAttention();
 renderRanking();
 renderObjects();
 renderStock();
-renderReports();
 renderPlan();
 renderCustomers();
 renderStats();
@@ -850,7 +819,7 @@ list.slice(0,8).map((x,i)=>`
 
 <div class="card">
 <div class="row">
-<b>${x.name}</b>
+<b>${i+1}. ${x.name}</b>
 <span class="badge fault">${x.count} závad</span>
 </div>
 </div>
@@ -1280,6 +1249,8 @@ const faults=[
 "Jiná závada"
 ];
 
+/* Zmenší fotografii před uložením,
+   aby zbytečně nezabírala místo v localStorage. */
 function readPhoto(file){
 
 return new Promise((resolve,reject)=>{
@@ -1443,13 +1414,6 @@ const boxes=[
 ...document.querySelectorAll(".checkItem")
 ];
 
-const list=
-d.type==="HYDRANT"
-?
-hydrant
-:
-extinguisher;
-
 const fault=
 document.getElementById("checkFault").value;
 
@@ -1510,11 +1474,7 @@ const historyItem={
 date,
 action:"Kontrola",
 result:fault?"Závada":"Vyhovuje",
-note,
-checklist:list.map((name,index)=>({
-name,
-ok:!!boxes[index]?.checked
-}))
+note
 };
 
 if(photo)
@@ -1525,662 +1485,16 @@ d.history.push(historyItem);
 d.planYear=currentYear;
 d.planCampaign=getCampaign(oid,currentYear);
 
-lastCompletedCheck={
-oid,
-did,
-historyIndex:d.history.length-1
-};
-
 closeModal();
 save();
-
-openCompletedCheckModal();
-
-}
-
-function openCompletedCheckModal(){
-
-const x=lastCompletedCheck;
-
-if(!x){
-
-alert("Kontrola byla uložena.");
-
-return;
-
-}
-
-openModal(`
-
-<div style="text-align:center;padding:15px 0">
-
-<div style="font-size:55px">✅</div>
-
-<h2>Kontrola uložena</h2>
-
-<p class="muted">
-Kontrola zařízení byla úspěšně uložena do historie.
-</p>
-
-<div class="actions" style="justify-content:center">
-
-<button class="primary"
-onclick="createReportFromLastCheck()">
-
-📄 Vytvořit protokol
-
-</button>
-
-<button class="gray"
-onclick="closeModal()">
-
-Zavřít
-
-</button>
-
-</div>
-
-</div>
-
-`);
-
-}
-
-function buildReportHtml(o,d,h){
-
-const checklist=
-Array.isArray(h.checklist)
-?
-h.checklist
-:
-[];
-
-const checklistHtml=
-checklist.length
-?
-checklist.map(x=>`
-
-<div style="
-display:flex;
-justify-content:space-between;
-padding:6px 0;
-border-bottom:1px solid #eee;
-">
-
-<span>${escapeHtml(x.name)}</span>
-
-<b>${x.ok?"✓ V pořádku":"⚠ Nesplněno"}</b>
-
-</div>
-
-`).join("")
-:
-`<div class="muted">
-Checklist nebyl u této kontroly uložen.
-</div>`;
-
-const photoHtml=
-h.photo
-?
-`
-<h3>Fotodokumentace</h3>
-
-<img
-src="${h.photo}"
-class="report-photo"
-alt="Fotografie z kontroly">
-
-`
-:
-"";
-
-return`
-
-<div>
-
-<h1 style="margin-top:0">
-Kontrolní protokol
-</h1>
-
-<div class="report-meta">
-
-<b>Datum kontroly:</b>
-${escapeHtml(h.date)}
-
-</div>
-
-<h2>1. Objekt</h2>
-
-<div class="report-meta">
-
-<b>Zákazník:</b>
-${escapeHtml(customerName(o.customerId))}<br>
-
-<b>Objekt:</b>
-${escapeHtml(o.name)}<br>
-
-<b>Adresa:</b>
-${escapeHtml(o.address)}
-
-</div>
-
-<h2>2. Kontrolované zařízení</h2>
-
-<div class="report-meta">
-
-<b>ID zařízení:</b>
-${escapeHtml(d.id)}<br>
-
-<b>QR ID:</b>
-${escapeHtml(d.qrId||d.id)}<br>
-
-<b>Typ:</b>
-${escapeHtml(typeName(d.type))}<br>
-
-<b>Výrobce:</b>
-${escapeHtml(d.maker||"—")}<br>
-
-<b>Výrobní číslo:</b>
-${escapeHtml(d.serial||"—")}<br>
-
-<b>Model:</b>
-${escapeHtml(d.model||"—")}<br>
-
-<b>Náplň:</b>
-${escapeHtml(d.charge||"—")}<br>
-
-<b>Umístění:</b>
-${escapeHtml(d.location||"—")}
-
-</div>
-
-<h2>3. Výsledek kontroly</h2>
-
-<div class="report-meta">
-
-<b>Výsledek:</b>
-${escapeHtml(h.result||"—")}<br>
-
-<b>Další kontrola:</b>
-${escapeHtml(d.next||"—")}<br>
-
-<b>Periodická zkouška:</b>
-${escapeHtml(d.periodicTest||"—")}<br>
-
-<b>Konec životnosti:</b>
-${escapeHtml(d.life||"—")}
-
-</div>
-
-<h2>4. Kontrolní body</h2>
-
-<div class="report-meta">
-
-${checklistHtml}
-
-</div>
-
-<h2>5. Závady a poznámky</h2>
-
-<div class="report-meta">
-
-<b>Aktivní závada:</b><br>
-
-${d.faults?.length
-?
-d.faults.map(x=>escapeHtml(x)).join("<br>")
-:
-"Bez závady"}
-
-<br><br>
-
-<b>Poznámka:</b><br>
-
-${h.note
-?
-escapeHtml(h.note).replace(/\n/g,"<br>")
-:
-"Bez poznámky"}
-
-</div>
-
-${photoHtml}
-
-<h2>6. Kontrolující osoba</h2>
-
-<div class="report-meta">
-
-Kontrolující osoba:
-________________________________________
-
-<br><br>
-
-Firma / organizace:
-________________________________________
-
-<br><br>
-
-Podpis:
-________________________________________
-
-</div>
-
-<div class="small" style="margin-top:25px">
-
-Protokol byl vytvořen z údajů uložených v evidenci zařízení.
-
-</div>
-
-</div>
-
-`;
-
-}
-
-function createReportFromLastCheck(){
-
-if(!lastCompletedCheck){
-
-alert("Není vybraná dokončená kontrola.");
-
-return;
-
-}
-
-const o=
-data.objects.find(
-x=>x.id===lastCompletedCheck.oid
-);
-
-if(!o){
-
-alert("Objekt už není v evidenci.");
-
-return;
-
-}
-
-const d=
-o.devices.find(
-x=>x.id===lastCompletedCheck.did
-);
-
-if(!d){
-
-alert("Zařízení už není v evidenci.");
-
-return;
-
-}
-
-const h=
-d.history?.[lastCompletedCheck.historyIndex];
-
-if(!h){
-
-alert("Kontrola nebyla nalezena v historii.");
-
-return;
-
-}
-
-const report={
-
-id:
-"REP-"+Date.now(),
-
-date:h.date,
-
-objectId:o.id,
-
-objectName:o.name,
-
-deviceId:d.id,
-
-deviceType:d.type,
-
-title:
-"Kontrolní protokol — "+d.id,
-
-html:
-buildReportHtml(o,d,h)
-
-};
-
-data.reports=data.reports||[];
-
-data.reports.unshift(report);
-
-save();
-
-closeModal();
-
-openReport(report.id);
-
-}
-
-function renderReports(){
-
-const list=
-data.reports||[];
-
-if(!list.length){
-
-reportsList.innerHTML=`
-
-<div class="card">
-
-<div style="font-size:40px;text-align:center">
-📄
-</div>
-
-<h3 style="text-align:center">
-Zatím žádný protokol
-</h3>
-
-<p class="muted" style="text-align:center">
-
-Dokonči kontrolu zařízení a následně vytvoř protokol.
-
-</p>
-
-</div>`;
-
-return;
-
-}
-
-reportsList.innerHTML=
-list.map(r=>`
-
-<div class="card">
-
-<div class="row">
-
-<div>
-
-<b>📄 ${escapeHtml(r.title||"Kontrolní protokol")}</b>
-
-<div class="small">
-${escapeHtml(r.date||"")} •
-${escapeHtml(r.objectName||"")} •
-${escapeHtml(r.deviceId||"")}
-</div>
-
-</div>
-
-<span class="badge ok">
-ULOŽENO
-</span>
-
-</div>
-
-<div class="actions">
-
-<button
-class="primary"
-onclick="openReport('${r.id}')">
-
-📄 Otevřít
-
-</button>
-
-<button
-class="light"
-onclick="printReport('${r.id}')">
-
-🖨️ Tisk / PDF
-
-</button>
-
-<button
-class="red"
-onclick="deleteReport('${r.id}')">
-
-🗑️ Smazat
-
-</button>
-
-</div>
-
-</div>
-
-`).join("");
-
-}
-
-function openReport(id){
-
-const r=
-data.reports.find(x=>x.id===id);
-
-if(!r)return;
-
-openModal(`
-
-<h2>📄 ${escapeHtml(r.title||"Kontrolní protokol")}</h2>
-
-<div class="small" style="margin-bottom:10px">
-${escapeHtml(r.date||"")} •
-${escapeHtml(r.objectName||"")} •
-${escapeHtml(r.deviceId||"")}
-</div>
-
-<label>Obsah protokolu</label>
-
-<div
-id="reportEditor"
-class="report-editor"
-contenteditable="true"
-spellcheck="false">
-
-${r.html||""}
-
-</div>
-
-<div class="actions no-print">
-
-<button
-class="primary"
-onclick="saveReport('${r.id}')">
-
-💾 Uložit protokol
-
-</button>
-
-<button
-class="light"
-onclick="printReport('${r.id}')">
-
-🖨️ Tisk / PDF
-
-</button>
-
-<button
-class="gray"
-onclick="closeModal()">
-
-Zavřít
-
-</button>
-
-</div>
-
-`);
-
-}
-
-function saveReport(id){
-
-const r=
-data.reports.find(x=>x.id===id);
-
-const editor=
-document.getElementById("reportEditor");
-
-if(!r||!editor)return;
-
-r.html=editor.innerHTML;
-
-r.updated=today();
-
-localStorage.setItem(
-KEY,
-JSON.stringify(data)
-);
-
-renderReports();
 
 alert(
-"Protokol byl uložen."
+photo
+?
+"Kontrola uložena včetně fotografie."
+:
+"Kontrola uložena."
 );
-
-}
-
-function deleteReport(id){
-
-const r=
-data.reports.find(x=>x.id===id);
-
-if(!r)return;
-
-if(
-!confirm(
-"Opravdu smazat tento protokol?"
-)
-)
-return;
-
-data.reports=
-data.reports.filter(
-x=>x.id!==id
-);
-
-save();
-
-closeModal();
-
-}
-
-function printReport(id){
-
-const r=
-data.reports.find(x=>x.id===id);
-
-if(!r)return;
-
-const w=
-window.open(
-"",
-"_blank"
-);
-
-if(!w){
-
-alert(
-"Prohlížeč zablokoval nové okno. Povol vyskakovací okna."
-);
-
-return;
-
-}
-
-w.document.write(`
-
-<!DOCTYPE html>
-
-<html lang="cs">
-
-<head>
-
-<meta charset="UTF-8">
-
-<title>${escapeHtml(r.title||"Kontrolní protokol")}</title>
-
-<style>
-
-body{
-font-family:Arial,sans-serif;
-color:#111;
-padding:30px;
-max-width:900px;
-margin:auto;
-line-height:1.5;
-}
-
-img{
-max-width:100%;
-max-height:500px;
-}
-
-h1{
-font-size:28px;
-}
-
-h2{
-font-size:20px;
-margin-top:25px;
-}
-
-.report-meta{
-background:#f5f5f5;
-padding:12px;
-border:1px solid #ddd;
-border-radius:8px;
-}
-
-@media print{
-body{
-padding:0;
-}
-}
-
-</style>
-
-</head>
-
-<body>
-
-${r.html||""}
-
-<script>
-
-window.onload=function(){
-window.print();
-};
-
-<\/script>
-
-</body>
-
-</html>
-
-`);
-
-w.document.close();
-
-}
-
-function reportFromHistory(oid,did,index){
-
-const o=
-data.objects.find(x=>x.id===oid);
-
-const d=
-o?.devices.find(x=>x.id===did);
-
-const h=
-d?.history?.[index];
-
-if(!o||!d||!h)return;
-
-lastCompletedCheck={
-oid,
-did,
-historyIndex:index
-};
-
-createReportFromLastCheck();
 
 }
 
@@ -4500,9 +3814,6 @@ data.customers||[];
 data.objects=
 data.objects||[];
 
-data.reports=
-data.reports||[];
-
 migrateOldMaintenance();
 
 localStorage.setItem(
@@ -4543,7 +3854,6 @@ data=demoData();
 
 currentYear=2027;
 activeCustomer="ALL";
-lastCompletedCheck=null;
 
 localStorage.setItem(
 KEY,
