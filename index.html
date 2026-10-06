@@ -1,399 +1,1031 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="cs">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Požárník AI</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+
+<title>Požárník AI — Evidence 0.1</title>
 
 <style>
-*{box-sizing:border-box}
+
+:root{
+--bg:#f4f6f8;
+--card:#fff;
+--ink:#111827;
+--muted:#667085;
+--line:#e4e7ec;
+--blue:#2563eb;
+--green:#16a34a;
+--orange:#d97706;
+--red:#dc2626;
+--purple:#7c3aed;
+}
+
+*{
+box-sizing:border-box
+}
+
 body{
- margin:0;
- background:#f4f6f8;
- color:#18212b;
- font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif
+margin:0;
+background:var(--bg);
+color:var(--ink);
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
 }
+
 header{
- background:linear-gradient(135deg,#b81717,#e23b2e);
- color:white;
- padding:22px 17px;
- border-radius:0 0 22px 22px
+background:#111827;
+color:#fff;
+padding:16px;
+position:sticky;
+top:0;
+z-index:5
 }
-header h1{margin:0;font-size:25px}
-header p{margin:4px 0 0;font-size:13px;opacity:.9}
+
+.top{
+display:flex;
+justify-content:space-between;
+align-items:center
+}
+
+.logo{
+font-size:20px;
+font-weight:800
+}
+
+.tag{
+font-size:11px;
+background:#374151;
+border-radius:999px;
+padding:5px 8px
+}
 
 main{
- max-width:900px;
- margin:auto;
- padding:15px 13px 95px
+max-width:850px;
+margin:auto;
+padding:15px 14px 95px
 }
 
-.page{display:none}
-.page.active{display:block}
-
-.card,.device{
- background:white;
- border:1px solid #e3e7ec;
- border-radius:15px;
- padding:14px;
- margin:10px 0;
- box-shadow:0 2px 8px #00000009
+.screen{
+display:none
 }
 
-h2{margin:4px 0 12px;font-size:20px}
-h3{margin:3px 0 8px;font-size:16px}
+.screen.active{
+display:block
+}
+
+h1{
+font-size:25px;
+margin:5px 0 16px
+}
+
+h2{
+font-size:18px;
+margin:22px 0 10px
+}
+
+h3{
+margin:8px 0
+}
 
 .grid{
- display:grid;
- grid-template-columns:repeat(2,1fr);
- gap:9px
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px
 }
 
 .stat{
- background:#f8fafc;
- border:1px solid #e4e8ee;
- border-radius:13px;
- padding:13px
-}
-.stat b{
- font-size:23px;
- display:block
-}
-.stat span,.small{
- font-size:12px;
- color:#718096
+background:#fff;
+border:1px solid var(--line);
+border-radius:16px;
+padding:14px
 }
 
-.between{
- display:flex;
- justify-content:space-between;
- gap:8px;
- align-items:center
+.stat b{
+font-size:25px;
+display:block
+}
+
+.stat span{
+font-size:12px;
+color:var(--muted)
+}
+
+.card{
+background:#fff;
+border:1px solid var(--line);
+border-radius:16px;
+padding:14px;
+margin:10px 0
 }
 
 .row{
- display:flex;
- gap:7px;
- flex-wrap:wrap;
- margin-top:9px
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px
+}
+
+.muted{
+color:var(--muted);
+font-size:13px
+}
+
+.tiny{
+font-size:11px;
+color:var(--muted)
 }
 
 button{
- border:0;
- border-radius:10px;
- padding:10px 13px;
- font-weight:700;
- background:#e9eef3;
- color:#17212b;
- cursor:pointer
-}
-button.primary{background:#d52b2b;color:white}
-button.green{background:#e0f5e8;color:#08743e}
-button.orange{background:#fff0d9;color:#995b00}
-button.danger{background:#ffe2e2;color:#a00000}
-
-input,select,textarea{
- width:100%;
- padding:10px;
- border:1px solid #d6dce4;
- border-radius:10px;
- background:white;
- font:inherit
+border:0;
+border-radius:11px;
+padding:10px 13px;
+font-weight:700;
+font-size:13px;
+background:#111827;
+color:#fff
 }
 
-textarea{min-height:80px}
+button.primary{
+background:var(--blue)
+}
+
+button.ghost{
+background:#eef2ff;
+color:#1d4ed8
+}
+
+button.red{
+background:#fee2e2;
+color:#991b1b
+}
+
+button.green{
+background:#dcfce7;
+color:#166534
+}
+
+.actions{
+display:flex;
+gap:7px;
+flex-wrap:wrap;
+margin-top:10px
+}
+
+input,
+select,
+textarea{
+width:100%;
+padding:11px;
+border:1px solid #d0d5dd;
+border-radius:10px;
+background:#fff;
+font:inherit;
+margin:5px 0 10px
+}
 
 label{
- display:block;
- font-size:12px;
- font-weight:700;
- color:#687384;
- margin:8px 0 4px
+font-size:12px;
+font-weight:700
 }
 
 .badge{
- display:inline-block;
- border-radius:99px;
- padding:4px 7px;
- font-size:11px;
- font-weight:800;
- background:#edf1f5
-}
-.red{background:#ffe1e1;color:#a00000}
-.greenb{background:#e0f5e8;color:#08743e}
-.orangeb{background:#fff0d9;color:#995b00}
-.blue{background:#e4efff;color:#175ca8}
-
-.empty{
- text-align:center;
- padding:18px;
- color:#718096
+display:inline-block;
+border-radius:999px;
+padding:5px 8px;
+font-size:10px;
+font-weight:800
 }
 
-.notice{
- background:#fff1dc;
- color:#895600;
- border-radius:10px;
- padding:10px;
- font-size:13px;
- margin:8px 0
+.ok{
+background:#dcfce7;
+color:#166534
 }
 
-.bottom{
- position:fixed;
- bottom:0;
- left:0;
- right:0;
- background:white;
- border-top:1px solid #ddd;
- display:grid;
- grid-template-columns:repeat(6,1fr);
- z-index:5;
- padding:5px 2px 7px
+.soon{
+background:#fef3c7;
+color:#92400e
 }
 
-.bottom button{
- background:transparent;
- padding:5px 1px;
- color:#697586;
- font-size:10px
+.late{
+background:#fee2e2;
+color:#991b1b
 }
 
-.bottom button.active{color:#d52b2b}
-.bottom span{
- display:block;
- font-size:18px
+.fault{
+background:#fce7f3;
+color:#9d174d
+}
+
+.life{
+background:#ede9fe;
+color:#5b21b6
+}
+
+.maint{
+background:#dbeafe;
+color:#1d4ed8
+}
+
+.object{
+cursor:pointer
+}
+
+.object:active{
+transform:scale(.99)
+}
+
+.progress{
+height:8px;
+background:#e5e7eb;
+border-radius:99px;
+overflow:hidden;
+margin-top:8px
+}
+
+.progress i{
+display:block;
+height:100%;
+background:#16a34a
+}
+
+nav{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:#fff;
+border-top:1px solid var(--line);
+display:flex;
+justify-content:center;
+z-index:10
+}
+
+nav button{
+flex:1;
+max-width:130px;
+background:#fff;
+color:#667085;
+border-radius:0;
+padding:11px 3px;
+font-size:10px
+}
+
+nav button.active{
+color:#2563eb
 }
 
 .modal{
- position:fixed;
- inset:0;
- background:#0008;
- display:none;
- align-items:flex-end;
- z-index:10
+display:none;
+position:fixed;
+inset:0;
+background:#0008;
+z-index:20;
+align-items:flex-end;
+overflow:auto;
+-webkit-overflow-scrolling:touch
 }
 
-.modal.open{display:flex}
+.modal.open{
+display:flex
+}
 
 .sheet{
- background:white;
- border-radius:20px 20px 0 0;
- padding:17px 14px 28px;
- width:100%;
- max-height:92vh;
- overflow:auto
+background:#fff;
+width:100%;
+max-width:850px;
+margin:auto;
+max-height:92dvh;
+overflow-y:auto;
+border-radius:20px 20px 0 0;
+padding:18px;
+touch-action:pan-y
 }
 
 .check{
- display:flex;
- gap:9px;
- align-items:center;
- border-bottom:1px solid #eee;
- padding:9px 0
+display:flex;
+align-items:center;
+gap:10px;
+padding:12px 3px;
+border-bottom:1px solid var(--line)
 }
 
 .check input{
- width:20px
+width:22px;
+height:22px;
+margin:0;
+accent-color:#2563eb
 }
 
-@media(min-width:700px){
- .grid{grid-template-columns:repeat(4,1fr)}
- .bottom{
-  max-width:900px;
-  margin:auto;
-  border-radius:18px 18px 0 0
- }
+.check span{
+flex:1
 }
+
+.alert{
+padding:12px;
+border-radius:13px;
+margin:8px 0;
+font-size:13px
+}
+
+.alert.red{
+background:#fef2f2;
+color:#991b1b
+}
+
+.alert.orange{
+background:#fffbeb;
+color:#92400e
+}
+
+.stock-tabs{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+margin-bottom:12px
+}
+
+.stock-tab{
+padding:14px;
+border-radius:13px;
+background:#e5e7eb;
+color:#475569;
+text-align:center;
+font-weight:800
+}
+
+.stock-tab.active{
+background:#111827;
+color:#fff
+}
+
+.stock-panel{
+display:none
+}
+
+.stock-panel.active{
+display:block
+}
+
+.empty{
+padding:25px;
+text-align:center;
+color:var(--muted);
+background:#fff;
+border-radius:15px;
+border:1px dashed var(--line)
+}
+
+.device-stock{
+border-left:5px solid #16a34a
+}
+
+.device-maintenance{
+border-left:5px solid #2563eb
+}
+
+.big-number{
+font-size:30px;
+font-weight:800
+}
+
+.search{
+position:relative
+}
+
+.search input{
+padding-left:35px
+}
+
+.search span{
+position:absolute;
+left:12px;
+top:16px
+}
+
+@media(max-width:600px){
+
+.grid{
+grid-template-columns:1fr 1fr
+}
+
+main{
+padding-left:12px;
+padding-right:12px
+}
+
+button{
+padding:10px 11px
+}
+
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>🔥 Požárník AI</h1>
-<p>Evidence a kontroly požárně bezpečnostních zařízení</p>
+
+<div class="top">
+
+<div class="logo">
+🧯 Požárník AI
+</div>
+
+<div class="tag">
+VERZE 0.1
+</div>
+
+</div>
+
 </header>
+
 
 <main>
 
-<!-- PŘEHLED -->
-<section id="overview" class="page active">
 
-<h2>Přehled</h2>
+<!-- ========================= -->
+<!-- PŘEHLED -->
+<!-- ========================= -->
+
+<section
+id="dashboard"
+class="screen active"
+>
+
+<h1>
+Přehled
+</h1>
+
+<div class="card">
+
+<div class="row">
+
+<div>
+
+<b>
+SVJ — 50 panelových domů
+</b>
+
+<div class="muted">
+Centrální evidence požární techniky
+</div>
+
+</div>
+
+<span class="badge ok">
+AKTIVNÍ
+</span>
+
+</div>
+
+</div>
+
 
 <div class="grid">
 
 <div class="stat">
-<b id="objCount">0</b>
-<span>Objektů</span>
+<b id="objects">0</b>
+<span>objektů</span>
 </div>
 
 <div class="stat">
-<b id="devCount">0</b>
-<span>Zařízení</span>
+<b id="devices">0</b>
+<span>zařízení</span>
 </div>
 
 <div class="stat">
-<b id="soonCount">0</b>
-<span>Do 30 dnů</span>
+<b id="due">0</b>
+<span>do 30 dnů</span>
 </div>
 
 <div class="stat">
-<b id="lateCount">0</b>
-<span>Po termínu</span>
+<b id="overdue">0</b>
+<span>po termínu</span>
+</div>
+
+<div class="stat">
+<b id="faults">0</b>
+<span>aktivních závad</span>
+</div>
+
+<div class="stat">
+<b id="life">0</b>
+<span>konec životnosti</span>
 </div>
 
 </div>
 
-<div class="card">
-<h3>🚨 Upozornění</h3>
+
+<h2>
+📦 Sklad
+</h2>
+
+<div class="grid">
+
+<div class="stat">
+
+<b id="stockCount">
+0
+</b>
+
+<span>
+hasičáků na skladě
+</span>
+
+</div>
+
+<div class="stat">
+
+<b id="maintenanceCountTop">
+0
+</b>
+
+<span>
+hasičáků na údržbě
+</span>
+
+</div>
+
+</div>
+
+
+<h2>
+⚠️ Co potřebuje pozornost
+</h2>
+
 <div id="alerts"></div>
-</div>
 
-<div class="card">
-<h3>📅 Roční plán kontrol</h3>
-<div id="plan"></div>
-</div>
+
+<h2>
+📊 Nejvíce závad podle objektu
+</h2>
+
+<div id="faultRanking"></div>
 
 </section>
 
 
-<!-- OBJEKTY -->
-<section id="objects" class="page">
 
-<div class="between">
-<h2>Objekty</h2>
-<button class="primary" onclick="newObject()">＋ Objekt</button>
+<!-- ========================= -->
+<!-- OBJEKTY -->
+<!-- ========================= -->
+
+<section
+id="objectsScreen"
+class="screen"
+>
+
+<div class="row">
+
+<h1>
+Objekty
+</h1>
+
+<button
+class="primary"
+onclick="openObjectForm()"
+>
++ Objekt
+</button>
+
 </div>
+
+
+<div class="search">
+
+<span>
+🔎
+</span>
+
+<input
+id="search"
+oninput="renderObjects()"
+placeholder="Hledat objekt..."
+>
+
+</div>
+
 
 <div id="objectsList"></div>
 
-</section>
-
-
-<!-- SKLAD -->
-<section id="stock" class="page">
-
-<div class="between">
-<h2>Sklad</h2>
-<button class="primary" onclick="newStock()">＋ Hasičák</button>
-</div>
-
-<div class="card">
-<h3>📦 Stav skladu</h3>
-<div id="stockStats" class="grid"></div>
-</div>
-
-<div class="card">
-<h3>🔧 Hasičáky v údržbě</h3>
-<div id="maintenance"></div>
-</div>
-
-<div class="card">
-<h3>Na skladě</h3>
-<div id="stockList"></div>
-</div>
-
-</section>
-
-
-<!-- ZPRÁVY -->
-<section id="messages" class="page">
-
-<h2>Zprávy</h2>
-
-<div class="card">
-<div id="messagesList"></div>
-</div>
-
-</section>
-
-
-<!-- KONTROLY -->
-<section id="checks" class="page">
-
-<h2>Kontroly</h2>
 
 <div class="card">
 
-<h3>📅 Roční kontrolní plán</h3>
-
-<p class="small">
-Duben = hlavní kontrolní akce.<br>
-Říjen = přesně dva vybrané objekty.
-</p>
-
-<div id="checksPlan"></div>
-
-</div>
-
-</section>
-
-
-<!-- VÍCE -->
-<section id="more" class="page">
-
-<h2>Více</h2>
-
-<div class="card">
-
-<h3>📊 Statistiky</h3>
-
-<div id="stats"></div>
-
-</div>
-
-
-<div class="card">
-
-<h3>⚙️ Zákonné lhůty</h3>
-
-<p class="small">
-<b>Pravidelná kontrola provozuschopnosti:</b>
-1× ročně.
-</p>
-
-<p class="small">
-<b>💧 Vodní:</b>
-periodická zkouška každé 3 roky.
-</p>
-
-<p class="small">
-<b>🧯 Práškový:</b>
-periodická zkouška každých 5 let.
-</p>
-
-<p class="small">
-<b>❄️ CO₂:</b>
-periodická zkouška každých 5 let.
-</p>
-
-<p class="small">
-<b>Konec životnosti / vyřazení:</b>
-eviduje se jako pevný termín.
-</p>
-
-</div>
-
-
-<div class="card">
-
-<h3>💾 Záloha dat</h3>
-
-<button onclick="backup()">Export zálohy</button>
-
-<button onclick="document.getElementById('file').click()">
-Import zálohy
-</button>
+<b>
+🔎 Rychlé hledání zařízení
+</b>
 
 <input
- id="file"
- type="file"
- accept=".json"
- hidden
- onchange="restore(this)"
+id="deviceSearch"
+oninput="renderDeviceSearch()"
+placeholder="ID, výrobní číslo, umístění nebo typ..."
 >
+
+<div id="deviceSearchResults"></div>
+
+</div>
+
+</section>
+
+
+
+<!-- ========================= -->
+<!-- SKLAD -->
+<!-- ========================= -->
+
+<section
+id="stockScreen"
+class="screen"
+>
+
+<h1>
+📦 Sklad hasicích přístrojů
+</h1>
+
+
+<div class="stock-tabs">
+
+<div
+id="stockTab"
+class="stock-tab active"
+onclick="switchStock('stock')"
+>
+📦 Na skladě
+</div>
+
+<div
+id="maintenanceTab"
+class="stock-tab"
+onclick="switchStock('maintenance')"
+>
+🔧 Na údržbě
+</div>
+
+</div>
+
+
+
+<!-- NA SKLADĚ -->
+
+<div
+id="stockPanel"
+class="stock-panel active"
+>
+
+<div class="card">
+
+<div class="row">
+
+<div>
+
+<div class="big-number">
+🧯
+</div>
+
+<b>
+Hasicí přístroje na skladě
+</b>
+
+<div class="muted">
+Každý kus má vlastní evidenci a ID.
+</div>
+
+</div>
+
+<button
+class="primary"
+onclick="openStockDeviceForm()"
+>
++ Přidat hasičák
+</button>
+
+</div>
+
+</div>
+
+
+<div id="stockList"></div>
+
+</div>
+
+
+
+<!-- NA ÚDRŽBĚ -->
+
+<div
+id="maintenancePanel"
+class="stock-panel"
+>
+
+<div class="card">
+
+<b>
+🔧 Hasicáky na údržbě
+</b>
+
+<p class="muted">
+Tady přesně vidíš, které konkrétní hasicí přístroje
+jsou momentálně na údržbě.
+</p>
+
+</div>
+
+
+<div id="maintenanceList"></div>
+
+</div>
+
+</section>
+
+
+
+<!-- ========================= -->
+<!-- ZPRÁVY -->
+<!-- ========================= -->
+
+<section
+id="reports"
+class="screen"
+>
+
+<h1>
+📄 Zprávy
+</h1>
+
+
+<div class="card">
+
+<b>
+📄 Připravené zprávy
+</b>
+
+<p class="muted">
+Po dokončení kontroly se zde budou ukládat
+kontrolní zprávy.
+</p>
+
+</div>
+
+
+<div class="card">
+
+<b>
+🤖 Požárník AI
+</b>
+
+<p class="muted">
+AI vezme údaje objektu, zařízení, checklist,
+závady a poznámky a vytvoří hotovou kontrolní zprávu.
+</p>
+
+</div>
+
+</section>
+
+
+
+<!-- ========================= -->
+<!-- KONTROLY -->
+<!-- ========================= -->
+
+<section
+id="calendar"
+class="screen"
+>
+
+<h1>
+📅 Kontroly
+</h1>
+
+
+<div class="grid">
+
+<div class="stat">
+
+<b id="todayCount">
+0
+</b>
+
+<span>
+dnes
+</span>
+
+</div>
+
+
+<div class="stat">
+
+<b id="weekCount">
+0
+</b>
+
+<span>
+do 7 dnů
+</span>
+
+</div>
+
+
+<div class="stat">
+
+<b id="monthCount">
+0
+</b>
+
+<span>
+do 30 dnů
+</span>
+
+</div>
+
+
+<div class="stat">
+
+<b id="calendarLate">
+0
+</b>
+
+<span>
+po termínu
+</span>
+
+</div>
+
+</div>
+
+
+<h2>
+🔴 Po termínu
+</h2>
+
+<div id="lateList"></div>
+
+
+<h2>
+🟠 Nejbližší kontroly
+</h2>
+
+<div id="upcomingList"></div>
+
+</section>
+
+
+
+<!-- ========================= -->
+<!-- VÍCE -->
+<!-- ========================= -->
+
+<section
+id="more"
+class="screen"
+>
+
+<h1>
+••• Více
+</h1>
+
+
+<div class="card">
+
+<b>
+📊 Statistiky
+</b>
+
+<p class="muted">
+Přehled závad, zařízení a objektů.
+</p>
+
+<button
+class="primary"
+onclick="show('stats',null)"
+>
+Otevřít statistiky
+</button>
+
+</div>
+
+
+<div class="card">
+
+<b>
+🔔 Upozornění
+</b>
+
+<p class="muted">
+Termíny 30 / 14 / 7 dní před kontrolou,
+po termínu, závady a konec životnosti.
+</p>
+
+</div>
+
+
+<div class="card">
+
+<b>
+📱 QR kódy
+</b>
+
+<p class="muted">
+Každé zařízení dostane vlastní QR identitu.
+Po načtení se otevře přímo jeho karta.
+</p>
+
+</div>
+
+
+<div class="card">
+
+<b>
+💾 Záloha dat
+</b>
+
+<div class="actions">
+
+<button
+class="primary"
+onclick="downloadBackup()"
+>
+⬇️ Export dat
+</button>
+
+<button
+class="ghost"
+onclick="document.getElementById('restore').click()"
+>
+⬆️ Import dat
+</button>
+
+</div>
+
+<input
+id="restore"
+type="file"
+accept=".json"
+style="display:none"
+onchange="restoreBackup(event)"
+>
+
+</div>
+
+</section>
+
+
+
+<!-- ========================= -->
+<!-- STATISTIKY -->
+<!-- ========================= -->
+
+<section
+id="stats"
+class="screen"
+>
+
+<div class="row">
+
+<h1>
+📊 Statistiky
+</h1>
+
+<button
+onclick="show('more',null)"
+>
+← Zpět
+</button>
+
+</div>
+
+
+<div class="card">
+
+<b>
+📍 Závady podle objektu
+</b>
+
+<div id="statsObjects"></div>
+
+</div>
+
+
+<div class="card">
+
+<b>
+🔧 Nejčastější typy závad
+</b>
+
+<div id="statsFaults"></div>
+
+</div>
+
+
+<div class="card">
+
+<b>
+🧯 Stav zařízení
+</b>
+
+<div id="statsStatus"></div>
 
 </div>
 
@@ -402,77 +1034,309 @@ Import zálohy
 </main>
 
 
-<!-- SPODNÍ MENU -->
 
-<nav class="bottom">
+<!-- ========================= -->
+<!-- NAVIGACE -->
+<!-- ========================= -->
 
-<button class="active" onclick="go('overview',this)">
-<span>🏠</span>Přehled
+<nav>
+
+<button
+class="active"
+onclick="show('dashboard',this)"
+>
+🏠<br>
+Přehled
 </button>
 
-<button onclick="go('objects',this)">
-<span>🏢</span>Objekty
+
+<button
+onclick="show('objectsScreen',this)"
+>
+🏢<br>
+Objekty
 </button>
 
-<button onclick="go('stock',this)">
-<span>📦</span>Sklad
+
+<button
+onclick="show('stockScreen',this)"
+>
+📦<br>
+Sklad
 </button>
 
-<button onclick="go('messages',this)">
-<span>🔔</span>Zprávy
+
+<button
+onclick="show('reports',this)"
+>
+📄<br>
+Zprávy
 </button>
 
-<button onclick="go('checks',this)">
-<span>📅</span>Kontroly
+
+<button
+onclick="show('calendar',this)"
+>
+📅<br>
+Kontroly
 </button>
 
-<button onclick="go('more',this)">
-<span>⋯</span>Více
+
+<button
+onclick="show('more',this)"
+>
+•••<br>
+Více
 </button>
 
 </nav>
 
 
-<!-- MODAL -->
 
-<div id="modal" class="modal" onclick="if(event.target===this)closeM()">
+<div
+id="modal"
+class="modal"
+>
 
-<div class="sheet" id="sheet"></div>
+<div
+class="sheet"
+id="sheet"
+>
+</div>
 
 </div>
 
 
+
 <script>
 
-const KEY="pozarnik_ai_v09";
 
-const PERIOD={
- vodni:3,
- praskovy:5,
- co2:5
+/* =========================
+   DATA
+========================= */
+
+const KEY='pozarnik_ai_v07';
+
+const faultTypes=[
+'Plomba poškozená',
+'Hadice / hubice',
+'Tlak / indikace',
+'Štítek / označení',
+'Umístění / přístup',
+'Vnější poškození',
+'Jiná závada'
+];
+
+let data=null;
+
+
+try{
+
+data=
+JSON.parse(
+localStorage.getItem(KEY)||'null'
+);
+
+}catch(e){
+
+data=null;
+
+}
+
+
+
+/* =========================
+   VYTVOŘENÍ DAT
+========================= */
+
+function makeData(){
+
+let objects=[];
+
+for(
+let i=1;
+i<=50;
+i++
+){
+
+let num=
+125+(i-1)*2;
+
+objects.push({
+
+id:
+'OBJ-'+
+String(i).padStart(3,'0'),
+
+name:
+'Panelový dům '+num,
+
+address:
+'Ulice '+num+', Bílina',
+
+devices:[]
+
+});
+
+}
+
+
+let id=1;
+
+
+objects.forEach(
+(o,idx)=>{
+
+let count=
+[4,16,0,3,1,8,2,0,12,1]
+[idx%10];
+
+
+for(
+let j=1;
+j<=count;
+j++
+){
+
+let type=
+j%4===0
+?
+'HYDRANT'
+:
+'PHP 6';
+
+
+let d=new Date();
+
+d.setDate(
+d.getDate()+
+((idx*7+j*11)%100)-20
+);
+
+
+let next=
+d.toISOString()
+.slice(0,10);
+
+
+let lifeD=new Date();
+
+lifeD.setFullYear(
+lifeD.getFullYear()+
+(type==='HYDRANT'?5:3)
+);
+
+lifeD.setDate(
+lifeD.getDate()-
+((idx+j)%100)
+);
+
+
+o.devices.push({
+
+id:
+'Z-'+
+String(id++).padStart(4,'0'),
+
+type:type,
+
+serial:
+'SN-'+
+String(70000+id),
+
+location:
+(j%3+1)+
+'. podlaží – chodba',
+
+last:'2026-10-01',
+
+next:next,
+
+life:
+lifeD.toISOString()
+.slice(0,10),
+
+faults:[],
+
+maintenanceStatus:
+'active',
+
+maintenanceSent:null,
+
+maintenanceHistory:[]
+
+});
+
+}
+
+});
+
+
+return{
+
+customer:{
+name:
+'SVJ — 50 panelových domů',
+contact:'Správa SVJ',
+phone:'777 000 000'
+},
+
+objects:objects,
+
+checks:[],
+
+/*
+SKLAD JE NYNÍ ČISTĚ
+SEZNAM JEDNOTLIVÝCH HASICÍCH PŘÍSTROJŮ
+*/
+
+stockDevices:[],
+
+maintenance:[]
+
 };
 
-const TYPES={
- vodni:"💧 Vodní",
- praskovy:"🧯 Práškový",
- co2:"❄️ CO₂"
-};
+}
 
-let D=JSON.parse(
- localStorage.getItem(KEY)||"null"
-)||{
- objects:[],
- stock:[],
- year:new Date().getFullYear(),
- oct:[]
-};
 
+
+/* =========================
+   START DAT
+========================= */
+
+if(
+!data ||
+!Array.isArray(data.objects) ||
+!data.objects.every(
+o=>o && Array.isArray(o.devices)
+)
+){
+
+data=makeData();
+
+}
+
+
+if(!Array.isArray(data.checks))
+data.checks=[];
+
+if(!Array.isArray(data.stockDevices))
+data.stockDevices=[];
+
+if(!Array.isArray(data.maintenance))
+data.maintenance=[];
+
+
+
+/* =========================
+   ULOŽENÍ
+========================= */
 
 function save(){
 
 localStorage.setItem(
- KEY,
- JSON.stringify(D)
+KEY,
+JSON.stringify(data)
 );
 
 render();
@@ -480,1330 +1344,3501 @@ render();
 }
 
 
-function esc(x){
 
-return String(x||"").replace(
- /[&<>"']/g,
- m=>({
- "&":"&amp;",
- "<":"&lt;",
- ">":"&gt;",
- '"':"&quot;",
- "'":"&#039;"
- }[m])
-);
-
-}
-
-
-function ID(prefix){
-
-return prefix+"-"+Date.now().toString(36).slice(-6);
-
-}
-
+/* =========================
+   DATUMY
+========================= */
 
 function today(){
 
-return new Date().toISOString().slice(0,10);
-
-}
-
-
-function years(date,num){
-
-if(!date)return "";
-
-let d=new Date(date);
-
-d.setFullYear(
- d.getFullYear()+num
+return new Date(
+new Date().toDateString()
 );
 
-return d.toISOString().slice(0,10);
-
 }
 
 
-function days(date){
+function days(s){
+
+if(!s)
+return 99999;
 
 return Math.ceil(
- (new Date(date)-new Date())/86400000
+(
+new Date(s+'T00:00:00')-
+today()
+)/86400000
 );
 
 }
 
 
-function go(page,button){
+
+/* =========================
+   VŠECHNA ZAŘÍZENÍ
+========================= */
+
+function allDevices(){
+
+return data.objects.flatMap(
+o=>
+o.devices.map(
+d=>({
+...d,
+object:o
+})
+)
+);
+
+}
+
+
+
+/* =========================
+   STAV
+========================= */
+
+function status(x){
+
+if(
+x.maintenanceStatus===
+'maintenance'
+)
+return 'maint';
+
+
+if(x.faults.length)
+return 'fault';
+
+
+if(
+x.life &&
+days(x.life)<=90
+)
+return 'life';
+
+
+if(
+x.next &&
+days(x.next)<0
+)
+return 'late';
+
+
+if(
+x.next &&
+days(x.next)<=30
+)
+return 'soon';
+
+
+return 'ok';
+
+}
+
+
+function label(s){
+
+if(s==='maint')
+return 'NA ÚDRŽBĚ';
+
+if(s==='fault')
+return 'ZÁVADA';
+
+if(s==='life')
+return 'KONEC ŽIVOTNOSTI';
+
+if(s==='late')
+return 'PO TERMÍNU';
+
+if(s==='soon')
+return 'DO 30 DNŮ';
+
+return 'V POŘÁDKU';
+
+}
+
+
+
+/* =========================
+   NAVIGACE
+========================= */
+
+function show(id,btn){
 
 document
-.querySelectorAll(".page")
-.forEach(x=>x.classList.remove("active"));
+.querySelectorAll('.screen')
+.forEach(
+s=>s.classList.remove('active')
+);
 
 document
-.getElementById(page)
-.classList.add("active");
+.getElementById(id)
+.classList.add('active');
+
 
 document
-.querySelectorAll(".bottom button")
-.forEach(x=>x.classList.remove("active"));
+.querySelectorAll('nav button')
+.forEach(
+b=>b.classList.remove('active')
+);
 
-button.classList.add("active");
+if(btn)
+btn.classList.add('active');
+
 
 render();
 
 }
 
 
-function openM(html){
 
-document.getElementById("sheet").innerHTML=html;
+/* =========================
+   SKLAD TABY
+========================= */
+
+function switchStock(type){
 
 document
-.getElementById("modal")
-.classList.add("open");
+.getElementById('stockTab')
+.classList.toggle(
+'active',
+type==='stock'
+);
+
+document
+.getElementById('maintenanceTab')
+.classList.toggle(
+'active',
+type==='maintenance'
+);
+
+
+document
+.getElementById('stockPanel')
+.classList.toggle(
+'active',
+type==='stock'
+);
+
+
+document
+.getElementById('maintenancePanel')
+.classList.toggle(
+'active',
+type==='maintenance'
+);
+
+
+renderStock();
 
 }
 
 
-function closeM(){
 
-document
-.getElementById("modal")
-.classList.remove("open");
+/* =========================
+   SKLAD HASICÁKŮ
+========================= */
+
+function renderStock(){
+
+let stock=
+data.stockDevices
+.filter(
+d=>d.status==='stock'
+);
+
+
+let maintenance=
+data.stockDevices
+.filter(
+d=>d.status==='maintenance'
+);
+
+
+document.getElementById(
+'stockCount'
+).textContent=
+stock.length;
+
+
+document.getElementById(
+'maintenanceCountTop'
+).textContent=
+maintenance.length;
+
+
+
+/* NA SKLADĚ */
+
+let list=
+document.getElementById(
+'stockList'
+);
+
+
+if(!stock.length){
+
+list.innerHTML=`
+
+<div class="empty">
+
+🧯
+
+<br><br>
+
+Na skladě zatím není žádný
+hasičský přístroj.
+
+<br><br>
+
+<button
+class="primary"
+onclick="openStockDeviceForm()"
+>
++ Přidat hasičák
+</button>
+
+</div>
+
+`;
+
+}else{
+
+list.innerHTML=
+stock
+.map(
+d=>stockDeviceCard(d)
+)
+.join('');
 
 }
+
+
+
+/* NA ÚDRŽBĚ */
+
+let ml=
+document.getElementById(
+'maintenanceList'
+);
+
+
+if(!maintenance.length){
+
+ml.innerHTML=`
+
+<div class="empty">
+
+🔧
+
+<br><br>
+
+Momentálně není žádný hasičák
+na údržbě.
+
+</div>
+
+`;
+
+}else{
+
+ml.innerHTML=
+maintenance
+.map(
+d=>maintenanceDeviceCard(d)
+)
+.join('');
+
+}
+
+}
+
+
+
+/* =========================
+   KARTA SKLADU
+========================= */
+
+function stockDeviceCard(d){
+
+return`
+
+<div class="card device-stock">
+
+<div class="row">
+
+<div>
+
+<b>
+🧯 ${d.id}
+</b>
+
+<div class="muted">
+${d.type}
+</div>
+
+</div>
+
+<span class="badge ok">
+NA SKLADĚ
+</span>
+
+</div>
+
+
+<p class="tiny">
+
+Výrobce:
+<b>${d.maker||'—'}</b>
+
+<br>
+
+Výrobní číslo:
+<b>${d.serial||'—'}</b>
+
+<br>
+
+Náplň:
+${d.charge||'—'}
+
+<br>
+
+Výroba:
+${d.manufactured||'—'}
+
+<br>
+
+Na sklad přijato:
+${d.received||'—'}
+
+</p>
+
+
+<div class="actions">
+
+<button
+class="ghost"
+onclick="openStockDevice('${d.id}')"
+>
+Detail
+</button>
+
+<button
+class="primary"
+onclick="sendStockToMaintenance('${d.id}')"
+>
+🔧 Poslat na údržbu
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+
+
+/* =========================
+   KARTA ÚDRŽBY
+========================= */
+
+function maintenanceDeviceCard(d){
+
+return`
+
+<div class="card device-maintenance">
+
+<div class="row">
+
+<div>
+
+<b>
+🔧 ${d.id}
+</b>
+
+<div class="muted">
+${d.type}
+</div>
+
+</div>
+
+<span class="badge maint">
+NA ÚDRŽBĚ
+</span>
+
+</div>
+
+
+<p class="tiny">
+
+Výrobce:
+${d.maker||'—'}
+
+<br>
+
+Výrobní číslo:
+${d.serial||'—'}
+
+<br>
+
+📅 Na údržbu odesláno:
+<b>${d.maintenanceSent||'—'}</b>
+
+</p>
+
+
+<div class="actions">
+
+<button
+class="ghost"
+onclick="openStockDevice('${d.id}')"
+>
+Detail
+</button>
+
+<button
+class="green"
+onclick="returnStockFromMaintenance('${d.id}')"
+>
+↩️ Vrátit z údržby
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+
+
+/* =========================
+   PŘIDAT HASIČÁK NA SKLAD
+========================= */
+
+function openStockDeviceForm(){
+
+document.getElementById(
+'sheet'
+).innerHTML=`
+
+<h2>
+🧯 Přidat hasicí přístroj na sklad
+</h2>
+
+<div class="alert">
+
+Každý hasičák dostane vlastní ID.
+Později bude toto ID zároveň použité
+pro QR kód.
+
+</div>
+
+
+<label>
+Typ hasicího přístroje
+</label>
+
+<select id="stockType">
+
+<option>
+PHP 6
+</option>
+
+<option>
+PHP 9
+</option>
+
+<option>
+CO₂ 2
+</option>
+
+<option>
+CO₂ 5
+</option>
+
+<option>
+Pěnový
+</option>
+
+<option>
+Práškový
+</option>
+
+</select>
+
+
+<label>
+Výrobce
+</label>
+
+<input
+id="stockMaker"
+placeholder="Např. Hastex"
+>
+
+
+<label>
+Výrobní číslo
+</label>
+
+<input
+id="stockSerial"
+placeholder="Výrobní číslo"
+>
+
+
+<label>
+Typ / model
+</label>
+
+<input
+id="stockModel"
+placeholder="Např. PG 6"
+>
+
+
+<label>
+Hmotnost / náplň
+</label>
+
+<input
+id="stockCharge"
+placeholder="Např. 6 kg"
+>
+
+
+<label>
+Datum výroby
+</label>
+
+<input
+id="stockManufactured"
+type="date"
+>
+
+
+<label>
+Datum přijetí na sklad
+</label>
+
+<input
+id="stockReceived"
+type="date"
+value="${new Date().toISOString().slice(0,10)}"
+>
+
+
+<label>
+Poznámka
+</label>
+
+<textarea
+id="stockNote"
+rows="3"
+placeholder="Volitelná poznámka..."
+></textarea>
+
+
+<div class="actions">
+
+<button
+class="primary"
+onclick="addStockDevice()"
+>
+💾 Uložit hasičák
+</button>
+
+<button
+onclick="closeModal()"
+>
+Zrušit
+</button>
+
+</div>
+
+`;
+
+document
+.getElementById('modal')
+.classList.add('open');
+
+}
+
+
+
+/* =========================
+   ULOŽIT HASIČÁK
+========================= */
+
+function addStockDevice(){
+
+let type=
+document.getElementById(
+'stockType'
+).value;
+
+
+let maker=
+document.getElementById(
+'stockMaker'
+).value.trim();
+
+
+let serial=
+document.getElementById(
+'stockSerial'
+).value.trim();
+
+
+let model=
+document.getElementById(
+'stockModel'
+).value.trim();
+
+
+let charge=
+document.getElementById(
+'stockCharge'
+).value.trim();
+
+
+let manufactured=
+document.getElementById(
+'stockManufactured'
+).value;
+
+
+let received=
+document.getElementById(
+'stockReceived'
+).value;
+
+
+let note=
+document.getElementById(
+'stockNote'
+).value.trim();
+
+
+let id=
+'SK-'+
+String(
+Date.now()
+).slice(-8);
+
+
+data.stockDevices.push({
+
+id:id,
+
+type:type,
+
+maker:maker,
+
+serial:serial,
+
+model:model,
+
+charge:charge,
+
+manufactured:manufactured,
+
+received:received,
+
+note:note,
+
+status:'stock',
+
+maintenanceSent:null,
+
+maintenanceHistory:[]
+
+});
+
+
+closeModal();
+
+save();
+
+alert(
+'Hasičák '+id+
+' byl přidán na sklad.'
+);
+
+}
+
+
+
+/* =========================
+   DETAIL SKLADOVÉHO HASIČÁKU
+========================= */
+
+function openStockDevice(id){
+
+let d=
+data.stockDevices.find(
+x=>x.id===id
+);
+
+if(!d)
+return;
+
+
+let maintenance=
+d.status==='maintenance';
+
+
+document.getElementById(
+'sheet'
+).innerHTML=`
+
+<h2>
+🧯 ${d.id}
+</h2>
+
+
+<div class="card">
+
+<div class="row">
+
+<b>
+${d.type}
+</b>
+
+<span class="badge ${
+maintenance
+?
+'maint'
+:
+'ok'
+}">
+${
+maintenance
+?
+'NA ÚDRŽBĚ'
+:
+'NA SKLADĚ'
+}
+</span>
+
+</div>
+
+
+<p class="muted">
+
+ID:
+<b>${d.id}</b>
+
+<br>
+
+Výrobce:
+${d.maker||'—'}
+
+<br>
+
+Výrobní číslo:
+${d.serial||'—'}
+
+<br>
+
+Model:
+${d.model||'—'}
+
+<br>
+
+Náplň:
+${d.charge||'—'}
+
+<br>
+
+Datum výroby:
+${d.manufactured||'—'}
+
+<br>
+
+Přijato na sklad:
+${d.received||'—'}
+
+<br>
+
+Poznámka:
+${d.note||'—'}
+
+</p>
+
+</div>
+
+
+
+${
+d.maintenanceHistory &&
+d.maintenanceHistory.length
+?
+
+`
+
+<h3>
+🔧 Historie údržby
+</h3>
+
+<div class="card">
+
+${
+d.maintenanceHistory
+.map(
+h=>`
+
+<div
+style="
+padding:8px 0;
+border-bottom:1px solid var(--line)
+"
+>
+
+<b>
+${
+h.action==='sent'
+?
+'🔧 Odeslán na údržbu'
+:
+'↩️ Vrácen z údržby'
+}
+</b>
+
+<div class="tiny">
+${h.date}
+</div>
+
+</div>
+
+`
+)
+.join('')
+}
+
+</div>
+
+`
+
+:
+
+''
+}
+
+
+
+<div class="actions">
+
+${
+maintenance
+
+?
+
+`
+
+<button
+class="green"
+onclick="returnStockFromMaintenance('${d.id}')"
+>
+↩️ Vrátit z údržby
+</button>
+
+`
+
+:
+
+`
+
+<button
+class="primary"
+onclick="sendStockToMaintenance('${d.id}')"
+>
+🔧 Poslat na údržbu
+</button>
+
+`
+
+}
+
+
+<button
+class="ghost"
+onclick="showStockQR('${d.id}')"
+>
+▣ QR kód
+</button>
+
+
+<button
+onclick="closeModal()"
+>
+Zavřít
+</button>
+
+</div>
+
+`;
+
+document
+.getElementById('modal')
+.classList.add('open');
+
+}
+
+
+
+/* =========================
+   POSLAT NA ÚDRŽBU
+========================= */
+
+function sendStockToMaintenance(id){
+
+let d=
+data.stockDevices.find(
+x=>x.id===id
+);
+
+if(!d)
+return;
+
+
+if(
+d.status==='maintenance'
+){
+
+alert(
+'Tento hasičák už je na údržbě.'
+);
+
+return;
+
+}
+
+
+let date=
+new Date()
+.toISOString()
+.slice(0,10);
+
+
+d.status='maintenance';
+
+d.maintenanceSent=date;
+
+
+if(!Array.isArray(d.maintenanceHistory))
+d.maintenanceHistory=[];
+
+
+d.maintenanceHistory.push({
+
+action:'sent',
+
+date:date
+
+});
+
+
+data.maintenance.push({
+
+deviceId:d.id,
+
+type:d.type,
+
+maker:d.maker,
+
+serial:d.serial,
+
+sentDate:date,
+
+status:'maintenance'
+
+});
+
+
+save();
+
+
+alert(
+'Hasičák '+d.id+
+' byl odeslán na údržbu.'
+);
+
+
+openStockDevice(id);
+
+}
+
+
+
+/* =========================
+   VRÁTIT Z ÚDRŽBY
+========================= */
+
+function returnStockFromMaintenance(id){
+
+let d=
+data.stockDevices.find(
+x=>x.id===id
+);
+
+if(!d)
+return;
+
+
+let date=
+new Date()
+.toISOString()
+.slice(0,10);
+
+
+d.status='stock';
+
+d.maintenanceSent=null;
+
+
+if(!Array.isArray(d.maintenanceHistory))
+d.maintenanceHistory=[];
+
+
+d.maintenanceHistory.push({
+
+action:'returned',
+
+date:date
+
+});
+
+
+let m=
+data.maintenance.find(
+x=>
+x.deviceId===id &&
+x.status==='maintenance'
+);
+
+
+if(m){
+
+m.status='returned';
+
+m.returnedDate=date;
+
+}
+
+
+save();
+
+
+alert(
+'Hasičák '+id+
+' byl vrácen z údržby.'
+);
+
+
+openStockDevice(id);
+
+}
+
+
+
+/* =========================
+   QR
+========================= */
+
+function showStockQR(id){
+
+let d=
+data.stockDevices.find(
+x=>x.id===id
+);
+
+if(!d)
+return;
+
+
+document.getElementById(
+'sheet'
+).innerHTML=`
+
+<h2>
+▣ QR identita
+</h2>
+
+<div
+class="card"
+style="text-align:center"
+>
+
+<div
+style="
+font-size:110px;
+line-height:1
+"
+>
+▣
+</div>
+
+<h2>
+${d.id}
+</h2>
+
+<div class="muted">
+${d.type}
+</div>
+
+<p class="tiny">
+
+Toto je zatím pouze identita zařízení.
+V další verzi zde vytvoříme skutečný QR kód,
+který po naskenování otevře přímo tento hasičák.
+
+</p>
+
+</div>
+
+
+<div class="actions">
+
+<button
+class="primary"
+onclick="closeModal()"
+>
+Hotovo
+</button>
+
+</div>
+
+`;
+
+}
+
+
+
+/* =========================
+   KALENDÁŘ
+========================= */
+
+function renderCalendar(){
+
+let ds=
+allDevices()
+.filter(
+d=>d.maintenanceStatus!=='maintenance'
+);
+
+
+let todayN=
+ds.filter(
+d=>days(d.next)===0
+).length;
+
+
+let week=
+ds.filter(
+d=>
+days(d.next)>=0 &&
+days(d.next)<=7
+).length;
+
+
+let month=
+ds.filter(
+d=>
+days(d.next)>=0 &&
+days(d.next)<=30
+).length;
+
+
+let late=
+ds.filter(
+d=>days(d.next)<0
+)
+.sort(
+(a,b)=>
+days(a.next)-days(b.next)
+);
+
+
+document.getElementById(
+'todayCount'
+).textContent=todayN;
+
+
+document.getElementById(
+'weekCount'
+).textContent=week;
+
+
+document.getElementById(
+'monthCount'
+).textContent=month;
+
+
+document.getElementById(
+'calendarLate'
+).textContent=late.length;
+
+
+document.getElementById(
+'lateList'
+).innerHTML=
+
+late.length
+?
+late
+.slice(0,30)
+.map(
+d=>deviceCard(d,d.object)
+)
+.join('')
+:
+'<div class="card">✅ Nic není po termínu.</div>';
+
+
+let upcoming=
+ds.filter(
+d=>
+days(d.next)>=0 &&
+days(d.next)<=30
+)
+.sort(
+(a,b)=>
+days(a.next)-days(b.next)
+);
+
+
+document.getElementById(
+'upcomingList'
+).innerHTML=
+
+upcoming.length
+?
+upcoming
+.slice(0,30)
+.map(
+d=>deviceCard(d,d.object)
+)
+.join('')
+:
+'<div class="card muted">Žádné blížící se kontroly.</div>';
+
+}
+
+
+
+/* =========================
+   KARTA ZAŘÍZENÍ
+========================= */
+
+function deviceCard(d,o){
+
+let s=status(d);
+
+
+return`
+
+<div class="card">
+
+<div class="row">
+
+<div>
+
+<b>
+🧯 ${d.id}
+</b>
+
+<div class="muted">
+${d.type} • ${d.location}
+</div>
+
+</div>
+
+<span class="badge ${s}">
+${label(s)}
+</span>
+
+</div>
+
+
+<div class="tiny">
+
+Další kontrola:
+<b>${d.next||'—'}</b>
+
+${
+d.faults.length
+?
+'<br>⚠️ '+
+d.faults.length+
+' závada/y'
+:
+''
+}
+
+</div>
+
+
+<div class="actions">
+
+<button
+class="primary"
+onclick="openCheck('${o.id}','${d.id}')"
+>
+✓ Kontrola
+</button>
+
+<button
+class="ghost"
+onclick="openDevice('${o.id}','${d.id}')"
+>
+Detail
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+
+
+/* =========================
+   PŘEHLED
+========================= */
+
+function renderAlerts(){
+
+let ds=
+allDevices()
+.filter(
+d=>status(d)!=='ok'
+)
+.sort(
+(a,b)=>days(a.next)-days(b.next)
+)
+.slice(0,7);
+
+
+document.getElementById(
+'alerts'
+).innerHTML=
+
+ds.length
+
+?
+
+ds.map(
+d=>`
+
+<div class="alert ${
+status(d)==='late' ||
+status(d)==='fault'
+?
+'red'
+:
+'orange'
+}">
+
+<b>
+${d.object.name}
+</b>
+
+<br>
+
+${d.id} —
+${d.type} —
+${label(status(d))}
+
+</div>
+
+`
+).join('')
+
+:
+
+'<div class="card">✅ Všechno vypadá dobře.</div>';
+
+}
+
+
+
+/* =========================
+   RANKING ZÁVAD
+========================= */
+
+function renderRanking(){
+
+let arr=
+data.objects
+.map(
+o=>({
+
+name:o.name,
+
+count:
+o.devices.reduce(
+(n,d)=>
+n+d.faults.length,
+0
+)
+
+})
+)
+.filter(
+x=>x.count
+)
+.sort(
+(a,b)=>b.count-a.count
+);
+
+
+document.getElementById(
+'faultRanking'
+).innerHTML=
+
+arr.length
+
+?
+
+arr
+.slice(0,8)
+.map(
+(x,i)=>`
+
+<div class="card">
+
+<div class="row">
+
+<b>
+${i+1}.
+${x.name}
+</b>
+
+<span class="badge fault">
+${x.count} závad
+</span>
+
+</div>
+
+</div>
+
+`
+).join('')
+
+:
+
+'<div class="card muted">Zatím žádné evidované závady.</div>';
+
+}
+
 
 
 /* =========================
    OBJEKTY
 ========================= */
 
-function newObject(){
+function renderObjects(){
 
-openM(`
+let q=
+(
+document.getElementById(
+'search'
+)?.value||''
+)
+.toLowerCase();
 
-<h2>Nový objekt</h2>
 
-<label>Název objektu</label>
-<input id="newName">
+let arr=
+data.objects.filter(
+o=>
+(
+o.name+' '+o.address
+)
+.toLowerCase()
+.includes(q)
+);
 
-<label>Adresa</label>
-<input id="newAddress">
 
-<label>Roční termín kontroly</label>
+document.getElementById(
+'objectsList'
+).innerHTML=
 
-<select id="newMonth">
+arr.map(
+o=>{
 
-<option value="apr">
-Duben – hlavní kontrola
-</option>
+let ds=o.devices;
 
-<option value="oct">
-Říjen – jeden ze 2 objektů
-</option>
+let bad=
+ds.filter(
+d=>d.faults.length
+).length;
 
-</select>
+
+let pending=
+ds.filter(
+d=>
+status(d)==='late' ||
+status(d)==='soon'
+).length;
+
+
+let ok=
+ds.filter(
+d=>status(d)==='ok'
+).length;
+
+
+let pct=
+ds.length
+?
+Math.round(
+ok/ds.length*100
+)
+:
+0;
+
+
+return`
+
+<div
+class="card object"
+onclick="openObject('${o.id}')"
+>
 
 <div class="row">
 
-<button onclick="closeM()">
-Zrušit
+<div>
+
+<b>
+🏢 ${o.name}
+</b>
+
+<div class="muted">
+${o.address}
+</div>
+
+</div>
+
+
+<span class="badge ${
+bad?'fault':'ok'
+}">
+
+${
+bad
+?
+bad+' závady'
+:
+'BEZ ZÁVAD'
+}
+
+</span>
+
+</div>
+
+
+<p class="tiny">
+
+🧯 ${
+ds.filter(
+d=>d.type!=='HYDRANT'
+).length
+}
+hasičáků
+
+&nbsp;
+
+🚒 ${
+ds.filter(
+d=>d.type==='HYDRANT'
+).length
+}
+hydrantů
+
+&nbsp;
+
+⚠️ ${pending} termínů
+
+</p>
+
+
+<div class="progress">
+
+<i
+style="width:${pct}%"
+></i>
+
+</div>
+
+
+<div
+class="tiny"
+style="margin-top:5px"
+>
+
+${pct}%
+zařízení bez aktuálního problému
+
+</div>
+
+</div>
+
+`;
+
+}
+).join('');
+
+}
+
+
+
+/* =========================
+   HLEDÁNÍ ZAŘÍZENÍ
+========================= */
+
+function renderDeviceSearch(){
+
+let q=
+(
+document.getElementById(
+'deviceSearch'
+)?.value||''
+)
+.toLowerCase()
+.trim();
+
+
+let box=
+document.getElementById(
+'deviceSearchResults'
+);
+
+
+if(!q){
+
+box.innerHTML=
+'<div class="tiny">Začni psát pro vyhledání konkrétního zařízení.</div>';
+
+return;
+
+}
+
+
+let hits=
+allDevices()
+.filter(
+d=>
+(
+d.id+' '+
+d.serial+' '+
+d.location+' '+
+d.type+' '+
+d.object.name
+)
+.toLowerCase()
+.includes(q)
+)
+.slice(0,20);
+
+
+box.innerHTML=
+
+hits.length
+
+?
+
+hits.map(
+d=>`
+
+<div class="card">
+
+<div class="row">
+
+<b>
+${d.id}
+</b>
+
+<span class="badge ${status(d)}">
+${label(status(d))}
+</span>
+
+</div>
+
+
+<div class="tiny">
+
+${d.object.name}
+•
+${d.type}
+•
+${d.location}
+
+</div>
+
+
+<div class="actions">
+
+<button
+class="ghost"
+onclick="openDevice('${d.object.id}','${d.id}')"
+>
+Detail
 </button>
 
-<button class="primary" onclick="addObject()">
-Uložit
+
+<button
+class="primary"
+onclick="openCheck('${d.object.id}','${d.id}')"
+>
+Kontrola
 </button>
 
 </div>
 
-`);
+</div>
+
+`
+).join('')
+
+:
+
+'<div class="tiny">Nic nenalezeno.</div>';
+
+}
+
+
+
+/* =========================
+   STATISTIKY
+========================= */
+
+function renderStats(){
+
+let arr=
+data.objects
+.map(
+o=>({
+
+name:o.name,
+
+count:
+o.devices.reduce(
+(n,d)=>
+n+d.faults.length,
+0
+)
+
+})
+)
+.sort(
+(a,b)=>b.count-a.count
+);
+
+
+document.getElementById(
+'statsObjects'
+).innerHTML=
+
+arr
+.slice(0,10)
+.map(
+x=>`
+
+<div style="margin:8px 0">
+
+<div class="row">
+
+<span>
+${x.name}
+</span>
+
+<b>
+${x.count}
+</b>
+
+</div>
+
+
+<div class="progress">
+
+<i
+style="
+width:${Math.min(
+100,
+x.count*10
+)}%
+"
+></i>
+
+</div>
+
+</div>
+
+`
+).join('');
+
+
+let map={};
+
+
+allDevices()
+.forEach(
+d=>
+d.faults.forEach(
+f=>
+map[f]=(map[f]||0)+1
+)
+);
+
+
+document.getElementById(
+'statsFaults'
+).innerHTML=
+
+Object.entries(map)
+.sort(
+(a,b)=>b[1]-a[1]
+)
+.map(
+x=>`
+
+<div
+class="row"
+style="
+padding:8px 0;
+border-bottom:1px solid var(--line)
+"
+>
+
+<span>
+${x[0]}
+</span>
+
+<b>
+${x[1]}×
+</b>
+
+</div>
+
+`
+).join('')
+
+||
+
+'<p class="muted">Zatím žádné závady.</p>';
+
+
+let ds=
+allDevices();
+
+
+let states={};
+
+
+ds.forEach(
+d=>{
+
+let s=
+label(status(d));
+
+states[s]=
+(states[s]||0)+1;
+
+});
+
+
+document.getElementById(
+'statsStatus'
+).innerHTML=
+
+Object.entries(states)
+.map(
+x=>`
+
+<div
+class="row"
+style="
+padding:8px 0;
+border-bottom:1px solid var(--line)
+"
+>
+
+<span>
+${x[0]}
+</span>
+
+<b>
+${x[1]}
+</b>
+
+</div>
+
+`
+).join('');
+
+}
+
+
+
+/* =========================
+   DETAIL OBJEKTU
+========================= */
+
+function openObject(oid){
+
+let o=
+data.objects.find(
+x=>x.id===oid
+);
+
+
+document.getElementById(
+'sheet'
+).innerHTML=
+
+`
+
+<h2>
+🏢 ${o.name}
+</h2>
+
+<p class="muted">
+${o.address}
+</p>
+
+
+<div class="grid">
+
+<div class="stat">
+
+<b>
+${o.devices.length}
+</b>
+
+<span>
+zařízení
+</span>
+
+</div>
+
+
+<div class="stat">
+
+<b>
+${
+o.devices.filter(
+d=>d.faults.length
+).length
+}
+</b>
+
+<span>
+závad
+</span>
+
+</div>
+
+</div>
+
+
+<h2>
+Zařízení
+</h2>
+
+
+${
+o.devices.length
+
+?
+
+o.devices
+.map(
+d=>deviceCard(d,o)
+)
+.join('')
+
+:
+
+'<div class="card muted">V objektu zatím není evidované žádné zařízení.</div>'
+}
+
+
+<div class="actions">
+
+<button
+class="primary"
+onclick="openDeviceForm('${oid}')"
+>
++ Přidat zařízení
+</button>
+
+<button
+onclick="closeModal()"
+>
+Zavřít
+</button>
+
+</div>
+
+`;
+
+
+document
+.getElementById('modal')
+.classList.add('open');
+
+}
+
+
+
+/* =========================
+   DETAIL ZAŘÍZENÍ
+========================= */
+
+function openDevice(oid,did){
+
+let o=
+data.objects.find(
+x=>x.id===oid
+);
+
+let d=
+o.devices.find(
+x=>x.id===did
+);
+
+
+let maintenance=
+d.maintenanceStatus==='maintenance';
+
+
+document.getElementById(
+'sheet'
+).innerHTML=
+
+`
+
+<h2>
+🧯 ${d.id}
+</h2>
+
+
+<div class="card">
+
+<div class="row">
+
+<b>
+${d.type}
+</b>
+
+<span class="badge ${
+maintenance
+?
+'maint'
+:
+'ok'
+}">
+
+${
+maintenance
+?
+'NA ÚDRŽBĚ'
+:
+'AKTIVNÍ'
+}
+
+</span>
+
+</div>
+
+
+<p class="muted">
+
+Objekt:
+${o.name}
+
+<br>
+
+Umístění:
+${d.location}
+
+<br>
+
+Výrobce:
+${d.maker||'—'}
+
+<br>
+
+Výrobní číslo:
+${d.serial||'—'}
+
+<br>
+
+Náplň:
+${d.charge||'—'}
+
+<br>
+
+Výroba:
+${d.manufactured||'—'}
+
+<br>
+
+QR / ID:
+${d.qrId||d.id}
+
+<br>
+
+Poslední kontrola:
+${d.last||'—'}
+
+<br>
+
+Další kontrola:
+${d.next||'—'}
+
+<br>
+
+Konec životnosti:
+${d.life||'—'}
+
+</p>
+
+
+${
+d.faults.length
+
+?
+
+'<b>⚠️ Aktivní závady</b><ul>'+
+d.faults
+.map(
+f=>'<li>'+f+'</li>'
+)
+.join('')
++
+'</ul>'
+
+:
+
+'<span class="badge ok">BEZ ZÁVAD</span>'
+}
+
+</div>
+
+
+<div class="actions">
+
+
+${
+maintenance
+
+?
+
+`
+
+<button
+class="green"
+onclick="returnObjectFromMaintenance('${oid}','${did}')"
+>
+↩️ Vrátit z údržby
+</button>
+
+`
+
+:
+
+`
+
+<button
+class="primary"
+onclick="sendObjectDeviceToMaintenance('${oid}','${did}')"
+>
+🔧 Poslat na údržbu
+</button>
+
+`
+}
+
+
+<button
+class="primary"
+onclick="
+closeModal();
+openCheck('${oid}','${did}')
+"
+>
+✓ Provést kontrolu
+</button>
+
+
+<button
+class="ghost"
+onclick="showQR('${oid}','${did}')"
+>
+▣ QR kód
+</button>
+
+
+<button
+onclick="closeModal()"
+>
+Zavřít
+</button>
+
+</div>
+
+`;
+
+
+document
+.getElementById('modal')
+.classList.add('open');
+
+}
+
+
+
+/* =========================
+   OBJEKT → ÚDRŽBA
+========================= */
+
+function sendObjectDeviceToMaintenance(
+oid,
+did
+){
+
+let o=
+data.objects.find(
+x=>x.id===oid
+);
+
+let d=
+o.devices.find(
+x=>x.id===did
+);
+
+
+if(!d)
+return;
+
+
+if(
+d.maintenanceStatus==='maintenance'
+){
+
+alert(
+'Toto zařízení už je na údržbě.'
+);
+
+return;
+
+}
+
+
+let date=
+new Date()
+.toISOString()
+.slice(0,10);
+
+
+d.maintenanceStatus=
+'maintenance';
+
+d.maintenanceSent=
+date;
+
+
+if(!Array.isArray(d.maintenanceHistory))
+d.maintenanceHistory=[];
+
+
+d.maintenanceHistory.push({
+
+action:'sent',
+
+date:date
+
+});
+
+
+data.maintenance.push({
+
+deviceId:d.id,
+
+type:d.type,
+
+objectId:o.id,
+
+objectName:o.name,
+
+location:d.location,
+
+sentDate:date,
+
+status:'maintenance'
+
+});
+
+
+save();
+
+
+alert(
+'Zařízení '+d.id+
+' bylo odesláno na údržbu.'
+);
+
+
+openDevice(oid,did);
+
+}
+
+
+
+/* =========================
+   OBJEKT ← ÚDRŽBA
+========================= */
+
+function returnObjectFromMaintenance(
+oid,
+did
+){
+
+let o=
+data.objects.find(
+x=>x.id===oid
+);
+
+let d=
+o.devices.find(
+x=>x.id===did
+);
+
+
+if(!d)
+return;
+
+
+let date=
+new Date()
+.toISOString()
+.slice(0,10);
+
+
+d.maintenanceStatus=
+'active';
+
+d.maintenanceSent=null;
+
+
+if(!Array.isArray(d.maintenanceHistory))
+d.maintenanceHistory=[];
+
+
+d.maintenanceHistory.push({
+
+action:'returned',
+
+date:date
+
+});
+
+
+let m=
+data.maintenance.find(
+x=>
+x.deviceId===did &&
+x.status==='maintenance'
+);
+
+
+if(m){
+
+m.status='returned';
+
+m.returnedDate=date;
+
+}
+
+
+save();
+
+
+alert(
+'Zařízení '+did+
+' bylo vráceno z údržby.'
+);
+
+
+openDevice(oid,did);
+
+}
+
+
+
+/* =========================
+   CHECKLIST
+========================= */
+
+function openCheck(oid,did){
+
+let o=
+data.objects.find(
+x=>x.id===oid
+);
+
+let d=
+o.devices.find(
+x=>x.id===did
+);
+
+
+let items=
+d.type==='HYDRANT'
+
+?
+
+[
+'Vnější stav skříně',
+'Hadice',
+'Proudnice / armatury',
+'Ventil',
+'Spoje',
+'Označení',
+'Přístupnost'
+]
+
+:
+
+[
+'Vnější stav přístroje',
+'Tlak / indikace',
+'Hadice / hubice',
+'Pojistka',
+'Plomba',
+'Štítek a označení',
+'Umístění a přístupnost'
+];
+
+
+document.getElementById(
+'sheet'
+).innerHTML=
+
+`
+
+<h2>
+Kontrola ${d.id}
+</h2>
+
+<p class="muted">
+${o.name}
+•
+${d.type}
+•
+${d.location}
+</p>
+
+
+<div class="alert orange">
+
+Odškrtni všechny kontrolované body.
+Pokud něco nevyhovuje, vyber závadu.
+
+</div>
+
+
+${
+items
+.map(
+(x,i)=>`
+
+<label class="check">
+
+<input
+type="checkbox"
+class="chk"
+id="ck${i}"
+>
+
+<span>
+${x}
+</span>
+
+</label>
+
+`
+)
+.join('')
+}
+
+
+<label>
+Výsledek / závada
+</label>
+
+
+<select
+id="faultSelect"
+>
+
+<option value="">
+Bez závady
+</option>
+
+${
+faultTypes
+.map(
+x=>`<option>${x}</option>`
+)
+.join('')
+}
+
+</select>
+
+
+<label>
+Poznámka
+</label>
+
+
+<textarea
+id="note"
+rows="3"
+placeholder="Volitelná poznámka..."
+></textarea>
+
+
+<div class="actions">
+
+<button
+class="primary"
+onclick="
+finishCheck('${oid}','${did}')
+"
+>
+✓ Dokončit kontrolu
+</button>
+
+
+<button
+class="red"
+onclick="closeModal()"
+>
+Zrušit
+</button>
+
+</div>
+
+`;
+
+
+document
+.getElementById('modal')
+.classList.add('open');
+
+}
+
+
+
+/* =========================
+   DOKONČIT KONTROLU
+========================= */
+
+function finishCheck(
+oid,
+did
+){
+
+let o=
+data.objects.find(
+x=>x.id===oid
+);
+
+let d=
+o.devices.find(
+x=>x.id===did
+);
+
+
+let boxes=[
+...document.querySelectorAll('.chk')
+];
+
+
+let fault=
+document.getElementById(
+'faultSelect'
+).value;
+
+
+let note=
+document.getElementById(
+'note'
+).value.trim();
+
+
+if(
+boxes.some(
+x=>!x.checked
+)
+&&
+!fault
+&&
+!note
+){
+
+alert(
+'Některý bod není zaškrtnutý.'
+);
+
+return;
+
+}
+
+
+d.last=
+new Date()
+.toISOString()
+.slice(0,10);
+
+
+let n=
+new Date();
+
+
+n.setFullYear(
+n.getFullYear()+1
+);
+
+
+d.next=
+n.toISOString()
+.slice(0,10);
+
+
+d.faults=
+fault
+?
+[fault]
+:
+[];
+
+
+if(note)
+d.faults.push(note);
+
+
+data.checks.push({
+
+date:d.last,
+
+object:o.name,
+
+device:d.id,
+
+result:
+fault
+?
+'Závada'
+:
+'Vyhovuje'
+
+});
+
+
+closeModal();
+
+save();
+
+
+alert(
+'Kontrola uložena.'
+);
+
+}
+
+
+
+/* =========================
+   NOVÝ OBJEKT
+========================= */
+
+function openObjectForm(){
+
+document.getElementById(
+'sheet'
+).innerHTML=
+
+`
+
+<h2>
+Nový objekt
+</h2>
+
+
+<label>
+Název
+</label>
+
+<input
+id="on"
+placeholder="Panelový dům 225"
+>
+
+
+<label>
+Adresa
+</label>
+
+<input
+id="oa"
+>
+
+
+<div class="actions">
+
+<button
+class="primary"
+onclick="addObject()"
+>
+Uložit
+</button>
+
+<button
+onclick="closeModal()"
+>
+Zrušit
+</button>
+
+</div>
+
+`;
+
+
+document
+.getElementById('modal')
+.classList.add('open');
 
 }
 
 
 function addObject(){
 
-let name=
-document.getElementById("newName")
-.value.trim();
+let n=
+document.getElementById(
+'on'
+).value.trim();
 
-if(!name){
 
-alert("Vyplň název objektu.");
-
+if(!n)
 return;
 
-}
 
-let object={
+data.objects.push({
 
-id:ID("OBJ"),
+id:
+'OBJ-'+Date.now(),
 
-name:name,
+name:n,
 
 address:
-document.getElementById("newAddress").value,
+document.getElementById(
+'oa'
+).value,
 
 devices:[]
 
-};
+});
 
 
-if(
-document.getElementById("newMonth").value==="oct"
-){
-
-if(D.oct.length>=2){
-
-alert(
-"V říjnu mohou být právě 2 objekty."
-);
-
-return;
-
-}
-
-D.oct.push(object.id);
-
-}
-
-D.objects.push(object);
-
-closeM();
+closeModal();
 
 save();
 
 }
 
-
-function editObject(id){
-
-let o=D.objects.find(x=>x.id===id);
-
-openM(`
-
-<h2>Upravit objekt</h2>
-
-<label>Název objektu</label>
-
-<input id="editName"
-value="${esc(o.name)}">
-
-<label>Adresa</label>
-
-<input id="editAddress"
-value="${esc(o.address)}">
-
-<label>Roční termín</label>
-
-<select id="editMonth">
-
-<option value="apr"
-${!D.oct.includes(id)?"selected":""}>
-Duben
-</option>
-
-<option value="oct"
-${D.oct.includes(id)?"selected":""}>
-Říjen
-</option>
-
-</select>
-
-<div class="row">
-
-<button onclick="closeM()">
-Zrušit
-</button>
-
-<button class="primary"
-onclick="updateObject('${id}')">
-Uložit
-</button>
-
-</div>
-
-`);
-
-}
-
-
-function updateObject(id){
-
-let o=D.objects.find(x=>x.id===id);
-
-let october=
-document.getElementById("editMonth").value==="oct";
-
-
-if(october && !D.oct.includes(id)){
-
-if(D.oct.length>=2){
-
-alert(
-"V říjnu mohou být právě 2 objekty."
-);
-
-return;
-
-}
-
-D.oct.push(id);
-
-}
-
-
-if(!october){
-
-D.oct=D.oct.filter(x=>x!==id);
-
-}
-
-
-o.name=
-document.getElementById("editName").value.trim();
-
-o.address=
-document.getElementById("editAddress").value;
-
-closeM();
-
-save();
-
-}
-
-
-function deleteObject(id){
-
-if(!confirm(
-"Smazat objekt i všechna jeho zařízení?"
-))return;
-
-D.objects=
-D.objects.filter(x=>x.id!==id);
-
-D.oct=
-D.oct.filter(x=>x!==id);
-
-save();
-
-}
 
 
 /* =========================
-   HASIČÁKY
+   NOVÉ ZAŘÍZENÍ V OBJEKTU
 ========================= */
 
-function newDevice(objectId,deviceId=""){
+function openDeviceForm(oid){
 
-let object=
-D.objects.find(x=>x.id===objectId);
+let o=
+data.objects.find(
+x=>x.id===oid
+);
 
-let d=
-object.devices.find(x=>x.id===deviceId)||{};
 
+document.getElementById(
+'sheet'
+).innerHTML=
 
-openM(`
+`
 
 <h2>
-${deviceId?"Upravit":"Nový"} hasicí přístroj
+➕ Přidat zařízení
 </h2>
 
-<label>Typ</label>
 
-<select id="deviceType">
+<p class="muted">
+Objekt:
+<b>${o.name}</b>
+</p>
 
-<option value="vodni"
-${d.type==="vodni"?"selected":""}>
-💧 Vodní
+
+<label>
+Typ zařízení
+</label>
+
+
+<select
+id="dt"
+onchange="toggleDeviceFields()"
+>
+
+<option value="PHP 6">
+🧯 Hasicí přístroj — PHP 6
 </option>
 
-<option value="praskovy"
-${d.type==="praskovy"?"selected":""}>
-🧯 Práškový
+<option value="PHP 9">
+🧯 Hasicí přístroj — PHP 9
 </option>
 
-<option value="co2"
-${d.type==="co2"?"selected":""}>
-❄️ CO₂
+<option value="CO2 5">
+🧯 Hasicí přístroj — CO₂ 5
+</option>
+
+<option value="HYDRANT">
+🚒 Hydrant
 </option>
 
 </select>
 
 
-<label>Výrobce</label>
-<input id="manufacturer"
-value="${esc(d.manufacturer)}">
+<div id="fireFields">
 
 
-<label>Výrobní číslo</label>
-<input id="serial"
-value="${esc(d.serial)}">
+<label>
+Výrobce
+</label>
 
-
-<label>Model / označení</label>
-<input id="model"
-value="${esc(d.model)}">
-
-
-<label>Datum výroby</label>
 <input
-type="date"
-id="manufacture"
-value="${d.manufacture||""}"
+id="dmaker"
+placeholder="Např. Hastex"
 >
 
 
-<label>Poslední pravidelná kontrola</label>
+<label>
+Výrobní číslo
+</label>
 
 <input
-type="date"
-id="lastControl"
-value="${d.lastControl||""}"
+id="ds"
+placeholder="Výrobní číslo"
 >
 
 
-<label>Konec životnosti / vyřazení</label>
+<label>
+Typ / označení
+</label>
 
 <input
-type="date"
-id="endLife"
-value="${d.endLife||""}"
+id="dmodel"
+placeholder="Např. PG 6"
 >
 
 
-<label>Poznámka</label>
+<label>
+Hmotnost / náplň
+</label>
 
-<textarea id="note">${esc(d.note)}</textarea>
-
-
-<div class="row">
-
-<button onclick="closeM()">
-Zrušit
-</button>
-
-<button class="primary"
-onclick="saveDevice('${objectId}','${deviceId}')">
-Uložit
-</button>
-
-</div>
-
-`);
-
-}
+<input
+id="dcharge"
+placeholder="Např. 6 kg"
+>
 
 
-function saveDevice(objectId,deviceId){
+<label>
+Datum výroby
+</label>
 
-let object=
-D.objects.find(x=>x.id===objectId);
-
-let type=
-document.getElementById("deviceType").value;
-
-let d={
-
-id:deviceId||ID("HAS"),
-
-type:type,
-
-manufacturer:
-document.getElementById("manufacturer").value,
-
-serial:
-document.getElementById("serial").value,
-
-model:
-document.getElementById("model").value,
-
-manufacture:
-document.getElementById("manufacture").value,
-
-lastControl:
-document.getElementById("lastControl").value,
-
-endLife:
-document.getElementById("endLife").value,
-
-note:
-document.getElementById("note").value
-
-};
+<input
+id="dmanufactured"
+type="date"
+>
 
 
-/*
-  ZÁKONNÉ LHŮTY:
-  roční kontrola = 1 rok
-  vodní = 3 roky
-  práškový = 5 let
-  CO2 = 5 let
-*/
+<label>
+Datum uvedení do provozu
+</label>
 
-d.nextControl=
-years(d.lastControl,1);
+<input
+id="dcommissioned"
+type="date"
+>
 
-d.periodicTest=
-years(
- d.lastControl,
- PERIOD[type]
-);
-
-
-if(deviceId){
-
-let index=
-object.devices.findIndex(
- x=>x.id===deviceId
-);
-
-object.devices[index]=d;
-
-}else{
-
-object.devices.push(d);
-
-}
-
-
-closeM();
-
-save();
-
-}
-
-
-/* =========================
-   KONTROLA
-========================= */
-
-function inspect(objectId,deviceId){
-
-let object=
-D.objects.find(x=>x.id===objectId);
-
-let d=
-object.devices.find(x=>x.id===deviceId);
-
-
-openM(`
-
-<h2>Kontrola ${d.id}</h2>
-
-<div class="small">
-${TYPES[d.type]} · ${esc(object.name)}
-</div>
-
-
-<div class="check">
-<input type="checkbox">
-Vnější stav je v pořádku
-</div>
-
-<div class="check">
-<input type="checkbox">
-Pojistka a plomba jsou v pořádku
-</div>
-
-<div class="check">
-<input type="checkbox">
-Hadice / hubice jsou v pořádku
-</div>
-
-<div class="check">
-<input type="checkbox">
-Tlak / indikace jsou v pořádku
-</div>
-
-<div class="check">
-<input type="checkbox">
-Označení a přístupnost jsou v pořádku
 </div>
 
 
 <label>
-Závada / poznámka
+Umístění
 </label>
 
-<textarea id="fault"></textarea>
-
-
-<div class="row">
-
-<button onclick="closeM()">
-Zrušit
-</button>
-
-<button class="green"
-onclick="finishInspection('${objectId}','${deviceId}')">
-Dokončit kontrolu
-</button>
-
-</div>
-
-`);
-
-}
-
-
-function finishInspection(objectId,deviceId){
-
-let object=
-D.objects.find(x=>x.id===objectId);
-
-let d=
-object.devices.find(x=>x.id===deviceId);
-
-d.lastControl=today();
-
-d.nextControl=
-years(d.lastControl,1);
-
-d.periodicTest=
-years(
- d.lastControl,
- PERIOD[d.type]
-);
-
-d.fault=
-document.getElementById("fault").value;
-
-
-closeM();
-
-save();
-
-}
-
-
-/* =========================
-   SKLAD
-========================= */
-
-function newStock(){
-
-openM(`
-
-<h2>Nový hasicí přístroj do skladu</h2>
-
-<label>Typ</label>
-
-<select id="stockType">
-
-<option value="vodni">
-💧 Vodní
-</option>
-
-<option value="praskovy">
-🧯 Práškový
-</option>
-
-<option value="co2">
-❄️ CO₂
-</option>
-
-</select>
-
-
-<label>Výrobce</label>
-<input id="stockManufacturer">
-
-
-<label>Výrobní číslo</label>
-<input id="stockSerial">
-
-
-<label>Model</label>
-<input id="stockModel">
-
-
-<label>Datum výroby</label>
-<input type="date" id="stockManufacture">
-
-
-<label>Datum přijetí na sklad</label>
-<input type="date" id="stockReceived" value="${today()}">
-
-
-<div class="row">
-
-<button onclick="closeM()">
-Zrušit
-</button>
-
-<button class="primary"
-onclick="addStock()">
-Přidat
-</button>
-
-</div>
-
-`);
-
-}
-
-
-function addStock(){
-
-D.stock.push({
-
-id:ID("SKL"),
-
-type:
-document.getElementById("stockType").value,
-
-manufacturer:
-document.getElementById("stockManufacturer").value,
-
-serial:
-document.getElementById("stockSerial").value,
-
-model:
-document.getElementById("stockModel").value,
-
-manufacture:
-document.getElementById("stockManufacture").value,
-
-received:
-document.getElementById("stockReceived").value,
-
-status:"stock",
-
-sentToMaintenance:"",
-
-returnedFromMaintenance:""
-
-});
-
-closeM();
-
-save();
-
-}
-
-
-function sendMaintenance(id){
-
-let s=
-D.stock.find(x=>x.id===id);
-
-s.status="maintenance";
-
-s.sentToMaintenance=today();
-
-save();
-
-}
-
-
-function returnMaintenance(id){
-
-let s=
-D.stock.find(x=>x.id===id);
-
-s.status="stock";
-
-s.returnedFromMaintenance=today();
-
-save();
-
-}
-
-
-/* =========================
-   RENDER
-========================= */
-
-function allDevices(){
-
-return D.objects.flatMap(
-o=>o.devices.map(
-d=>({...d,objectName:o.name})
-)
-);
-
-}
-
-
-function render(){
-
-let devices=
-allDevices();
-
-
-let soon=
-devices.filter(
-d=>d.nextControl &&
-days(d.nextControl)>=0 &&
-days(d.nextControl)<=30
-);
-
-
-let late=
-devices.filter(
-d=>d.nextControl &&
-days(d.nextControl)<0
-);
-
-
-document.getElementById("objCount")
-.textContent=D.objects.length;
-
-document.getElementById("devCount")
-.textContent=devices.length;
-
-document.getElementById("soonCount")
-.textContent=soon.length;
-
-document.getElementById("lateCount")
-.textContent=late.length;
-
-
-/* OBJEKTY */
-
-document.getElementById("objectsList")
-.innerHTML=
-D.objects.length?
-
-D.objects.map(o=>`
-
-<div class="card">
-
-<div class="between">
-
-<div>
-
-<b>🏢 ${esc(o.name)}</b>
-
-<div class="small">
-${esc(o.address)}
-</div>
-
-</div>
-
-<span class="badge blue">
-${o.devices.length} zařízení
-</span>
-
-</div>
-
-
-<div class="row">
-
-<button class="primary"
-onclick="newDevice('${o.id}')">
-＋ Hasičák
-</button>
-
-<button
-onclick="editObject('${o.id}')">
-Upravit
-</button>
-
-<button class="danger"
-onclick="deleteObject('${o.id}')">
-Smazat
-</button>
-
-</div>
-
-
-${o.devices.map(d=>`
-
-<div class="device">
-
-<div class="between">
-
-<b>${d.id}</b>
-
-<span class="badge">
-${TYPES[d.type]}
-</span>
-
-</div>
-
-
-<div class="small">
-
-${esc(d.manufacturer)}
-· ${esc(d.serial)}
-
-<br>
-
-Roční kontrola:
-${d.nextControl||"—"}
-
-<br>
-
-Periodická zkouška:
-${d.periodicTest||"—"}
-
-<br>
-
-Konec životnosti:
-${d.endLife||"—"}
-
-</div>
-
-
-<div class="row">
-
-<button class="green"
-onclick="inspect('${o.id}','${d.id}')">
-Kontrola
-</button>
-
-<button
-onclick="newDevice('${o.id}','${d.id}')">
-Upravit
-</button>
-
-</div>
-
-</div>
-
-`).join("")}
-
-</div>
-
-`).join("")
-
-:
-
-'<div class="empty">Zatím žádné objekty.</div>';
-
-
-/* SKLAD */
-
-let stock=
-D.stock.filter(
-x=>x.status==="stock"
-);
-
-let maintenance=
-D.stock.filter(
-x=>x.status==="maintenance"
-);
-
-
-document.getElementById("stockStats")
-.innerHTML=
-["vodni","praskovy","co2"]
-.map(t=>`
-
-<div class="stat">
-
-<b>
-${stock.filter(x=>x.type===t).length}
-</b>
-
-<span>
-${TYPES[t]}
-</span>
-
-</div>
-
-`).join("");
-
-
-document.getElementById("maintenance")
-.innerHTML=
-maintenance.length?
-
-maintenance.map(stockCard).join("")
-
-:
-
-'<div class="empty">
-Žádný hasičák není v údržbě.
-</div>';
-
-
-document.getElementById("stockList")
-.innerHTML=
-stock.length?
-
-stock.map(stockCard).join("")
-
-:
-
-'<div class="empty">
-Sklad je prázdný.
-</div>';
-
-
-/* PLÁN */
-
-let april=
-D.objects.filter(
-o=>!D.oct.includes(o.id)
-);
-
-let october=
-D.oct
-.map(id=>D.objects.find(o=>o.id===id))
-.filter(Boolean);
-
-
-document.getElementById("plan")
-.innerHTML=`
-
-<div class="notice">
-
-<b>${D.year}</b>
-
-· Duben:
-${april.length}
-
-objektů
-
-· Říjen:
-${october.length}/2
-
-</div>
-
-
-<b>🟥 Duben – hlavní kontrolní akce</b>
-
-${april.map(o=>`
-
-<div class="small">
-🏢 ${esc(o.name)}
-· ${o.devices.length} zařízení
-</div>
-
-`).join("")||'<div class="small">—</div>'}
-
-
-<br>
-
-<b>🍂 Říjen – dva vybrané objekty</b>
-
-${october.map(o=>`
-
-<div class="small">
-🍂 ${esc(o.name)}
-· ${o.devices.length} zařízení
-</div>
-
-`).join("")||'<div class="small">Zatím nejsou vybrané.</div>'}
-`;
-
-
-/* ALERTY */
-
-let alertHTML="";
-
-if(late.length){
-
-alertHTML+=`
-
-<span class="badge red">
-${late.length} kontrol po termínu
-</span>
-
-`;
-
-}
-
-if(soon.length){
-
-alertHTML+=`
-
-<span class="badge orangeb">
-${soon.length} kontrol do 30 dnů
-</span>
-
-`;
-
-}
-
-document.getElementById("alerts")
-.innerHTML=
-alertHTML ||
-'<div class="small">Vše je zatím v pořádku.</div>';
-
-
-/* ZPRÁVY */
-
-let messages=
-[...late,...soon];
-
-
-document.getElementById("messagesList")
-.innerHTML=
-messages.length?
-
-messages.map(d=>`
-
-<div class="device">
-
-<b>${d.id}</b>
-
-· ${esc(d.objectName)}
-
-<div class="small">
-
-Další kontrola:
-${d.nextControl}
-
-</div>
-
-</div>
-
-`).join("")
-
-:
-
-'<div class="empty">
-Žádné nové zprávy.
-</div>';
-
-
-/* KONTROLY */
-
-document.getElementById("checksPlan")
-.innerHTML=`
-
-<div class="notice">
-
-Rok:
-
 <input
-type="number"
-value="${D.year}"
-onchange="D.year=this.value;save()"
+id="dl"
+placeholder="2. patro – chodba u výtahu"
 >
 
-</div>
+
+<label>
+Poslední kontrola
+</label>
+
+<input
+id="dlast"
+type="date"
+>
 
 
-<h3>
-🟥 Duben – hlavní kontrolní akce
-</h3>
+<label>
+Další kontrola
+</label>
 
-${april.map(o=>`
-
-<div class="device">
-
-<b>${esc(o.name)}</b>
-
-<div class="small">
-${o.devices.length} zařízení
-</div>
-
-</div>
-
-`).join("")||'<div class="small">—</div>'}
+<input
+id="dn"
+type="date"
+>
 
 
-<h3>
-🍂 Říjen – přesně 2 vybrané objekty
-</h3>
+<label>
+Konec životnosti
+</label>
 
-${october.map(o=>`
-
-<div class="device">
-
-<b>${esc(o.name)}</b>
-
-<div class="small">
-${o.devices.length} zařízení
-</div>
-
-</div>
-
-`).join("")||'<div class="small">—</div>'}
-`;
+<input
+id="dli"
+type="date"
+>
 
 
-/* STATISTIKY */
+<label>
+Poznámka
+</label>
 
-document.getElementById("stats")
-.innerHTML=`
-
-<div class="grid">
-
-<div class="stat">
-<b>${D.objects.length}</b>
-<span>Objektů</span>
-</div>
-
-<div class="stat">
-<b>${devices.length}</b>
-<span>Zařízení</span>
-</div>
-
-<div class="stat">
-<b>${devices.filter(x=>x.fault).length}</b>
-<span>Závad</span>
-</div>
-
-<div class="stat">
-<b>${D.stock.length}</b>
-<span>Hasičáků ve skladu</span>
-</div>
-
-</div>
-
-`;
-
-}
+<textarea
+id="dnote"
+rows="2"
+placeholder="Volitelná poznámka..."
+></textarea>
 
 
-/* SKLADOVÁ KARTA */
+<div class="actions">
 
-function stockCard(x){
-
-let maintenance=
-x.status==="maintenance";
-
-
-return `
-
-<div class="device">
-
-<div class="between">
-
-<b>${x.id}</b>
-
-<span class="badge">
-${TYPES[x.type]}
-</span>
-
-</div>
-
-
-<div class="small">
-
-${esc(x.manufacturer)}
-· ${esc(x.serial)}
-
-<br>
-
-Výroba:
-${x.manufacture||"—"}
-
-<br>
-
-Přijetí na sklad:
-${x.received||"—"}
-
-${maintenance?
-
-`
-<br>
-Odesláno do údržby:
-${x.sentToMaintenance}
-`
-
-:""}
-
-</div>
-
-
-<div class="row">
-
-${maintenance?
-
-`
-
-<button class="green"
-onclick="returnMaintenance('${x.id}')">
-
-Vrátit z údržby
-
+<button
+class="primary"
+onclick="addDevice('${oid}')"
+>
+💾 Uložit zařízení
 </button>
 
-`
-
-:
-
-`
-
-<button class="orange"
-onclick="sendMaintenance('${x.id}')">
-
-Poslat na údržbu
-
+<button
+onclick="closeModal()"
+>
+Zrušit
 </button>
-
-`
-
-}
-
-</div>
 
 </div>
 
 `;
 
+
+document
+.getElementById('modal')
+.classList.add('open');
+
+
+toggleDeviceFields();
+
 }
 
 
-/* ZÁLOHA */
+function toggleDeviceFields(){
 
-function backup(){
-
-let a=
-document.createElement("a");
-
-a.href=
-URL.createObjectURL(
-new Blob(
-[JSON.stringify(D,null,2)],
-{type:"application/json"}
-)
+let fire=
+document.getElementById(
+'fireFields'
 );
 
+
+if(fire){
+
+fire.style.display=
+document.getElementById(
+'dt'
+).value==='HYDRANT'
+?
+'none'
+:
+'block';
+
+}
+
+}
+
+
+function addDevice(oid){
+
+let o=
+data.objects.find(
+x=>x.id===oid
+);
+
+
+let id=
+'Z-'+
+String(
+Date.now()
+).slice(-8);
+
+
+let type=
+document.getElementById(
+'dt'
+).value;
+
+
+let device={
+
+id:id,
+
+type:type,
+
+maker:
+type==='HYDRANT'
+?
+''
+:
+document.getElementById(
+'dmaker'
+).value,
+
+serial:
+type==='HYDRANT'
+?
+''
+:
+document.getElementById(
+'ds'
+).value,
+
+model:
+type==='HYDRANT'
+?
+''
+:
+document.getElementById(
+'dmodel'
+).value,
+
+charge:
+type==='HYDRANT'
+?
+''
+:
+document.getElementById(
+'dcharge'
+).value,
+
+manufactured:
+type==='HYDRANT'
+?
+''
+:
+document.getElementById(
+'dmanufactured'
+).value,
+
+commissioned:
+type==='HYDRANT'
+?
+''
+:
+document.getElementById(
+'dcommissioned'
+).value,
+
+location:
+document.getElementById(
+'dl'
+).value,
+
+last:
+document.getElementById(
+'dlast'
+).value,
+
+next:
+document.getElementById(
+'dn'
+).value,
+
+life:
+document.getElementById(
+'dli'
+).value,
+
+faults:[],
+
+qrId:id,
+
+maintenanceStatus:
+'active',
+
+maintenanceSent:null,
+
+maintenanceHistory:[]
+
+};
+
+
+o.devices.push(device);
+
+
+closeModal();
+
+save();
+
+openObject(oid);
+
+}
+
+
+
+/* =========================
+   QR OBJEKTU
+========================= */
+
+function showQR(
+oid,
+did
+){
+
+let o=
+data.objects.find(
+x=>x.id===oid
+);
+
+let d=
+o.devices.find(
+x=>x.id===did
+);
+
+
+document.getElementById(
+'sheet'
+).innerHTML=
+
+`
+
+<h2>
+▣ QR identita zařízení
+</h2>
+
+
+<div
+class="card"
+style="text-align:center"
+>
+
+<div
+style="
+font-size:105px;
+line-height:1
+"
+>
+▣
+</div>
+
+
+<h2>
+${d.id}
+</h2>
+
+
+<div class="muted">
+${d.type}
+•
+${o.name}
+</div>
+
+
+<p class="tiny">
+
+V další verzi zde bude skutečný QR kód,
+který po naskenování otevře přímo kartu tohoto zařízení.
+
+</p>
+
+</div>
+
+
+<div class="actions">
+
+<button
+class="primary"
+onclick="closeModal()"
+>
+Hotovo
+</button>
+
+</div>
+
+`;
+
+
+document
+.getElementById('modal')
+.classList.add('open');
+
+}
+
+
+
+/* =========================
+   ZÁLOHA
+========================= */
+
+function downloadBackup(){
+
+let blob=
+new Blob(
+[
+JSON.stringify(
+data,
+null,
+2
+)
+],
+{
+type:'application/json'
+}
+);
+
+
+let a=
+document.createElement('a');
+
+
+a.href=
+URL.createObjectURL(blob);
+
+
 a.download=
-"pozarnik-ai-zaloha.json";
+'pozarnik-ai-zaloha.json';
+
 
 a.click();
 
+
+URL.revokeObjectURL(
+a.href
+);
+
 }
 
 
-function restore(input){
+function restoreBackup(e){
+
+let file=
+e.target.files[0];
+
+
+if(!file)
+return;
+
 
 let reader=
 new FileReader();
 
-reader.onload=function(){
+
+reader.onload=()=>{
 
 try{
 
-D=
-JSON.parse(reader.result);
+let x=
+JSON.parse(
+reader.result
+);
+
+
+if(!x.objects)
+throw new Error();
+
+
+data=x;
+
+
+if(!Array.isArray(data.stockDevices))
+data.stockDevices=[];
+
+
+if(!Array.isArray(data.maintenance))
+data.maintenance=[];
+
 
 save();
 
+
 alert(
-"Záloha byla obnovena."
+'Záloha byla obnovena.'
 );
 
-}
 
-catch(e){
+}catch(err){
 
 alert(
-"Soubor není platná záloha."
+'Soubor nevypadá jako záloha Požárník AI.'
 );
 
 }
 
 };
 
-reader.readAsText(
-input.files[0]
-);
+
+reader.readAsText(file);
 
 }
 
 
-/* START */
+
+/* =========================
+   HLAVNÍ RENDER
+========================= */
+
+function render(){
+
+try{
+
+let ds=
+allDevices();
+
+
+let active=
+ds.filter(
+x=>
+x.maintenanceStatus!==
+'maintenance'
+);
+
+
+let due=
+active.filter(
+x=>
+days(x.next)>=0 &&
+days(x.next)<=30
+);
+
+
+let late=
+active.filter(
+x=>days(x.next)<0
+);
+
+
+let faults=
+active.filter(
+x=>x.faults.length
+);
+
+
+let life=
+active.filter(
+x=>
+x.life &&
+days(x.life)<=90
+);
+
+
+document.getElementById(
+'objects'
+).textContent=
+data.objects.length;
+
+
+document.getElementById(
+'devices'
+).textContent=
+ds.length;
+
+
+document.getElementById(
+'due'
+).textContent=
+due.length;
+
+
+document.getElementById(
+'overdue'
+).textContent=
+late.length;
+
+
+document.getElementById(
+'faults'
+).textContent=
+faults.length;
+
+
+document.getElementById(
+'life'
+).textContent=
+life.length;
+
+
+renderAlerts();
+
+renderRanking();
+
+renderObjects();
+
+renderStats();
+
+renderDeviceSearch();
+
+renderCalendar();
+
+renderStock();
+
+}catch(err){
+
+console.error(err);
+
+}
+
+}
+
+
+function closeModal(){
+
+document
+.getElementById('modal')
+.classList.remove('open');
+
+document.activeElement?.blur?.();
+
+}
+
 
 render();
 
