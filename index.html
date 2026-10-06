@@ -66,7 +66,7 @@ nav button.active{color:#2563eb}
 <header>
 <div class="header">
 <div class="logo">🧯 Požárník AI</div>
-<div class="version">V0.7</div>
+<div class="version">V0.8</div>
 </div>
 </header>
 
@@ -641,6 +641,7 @@ data.stock.forEach(x=>{
 
 if(
 x.status!=="retired" &&
+!x.manualRetireRestore &&
 x.type!=="HYDRANT" &&
 x.life &&
 daysUntil(x.life)<0
@@ -1213,7 +1214,7 @@ ${d.type!=="HYDRANT"
 ?
 `
 <button class="green"
-onclick="moveDeviceToStock('${oid}','${did}')">
+onclick="moveObjectToStock('${oid}','${did}','stock')">
 📦 Na sklad
 </button>
 
@@ -1928,6 +1929,11 @@ onclick="restoreRetired('${x.id}')">
 ♻️ Obnovit
 </button>
 
+<button class="green"
+onclick="restoreRetiredToStock('${x.id}')">
+📦 Vrátit na sklad
+</button>
+
 <button class="red"
 onclick="deleteRetired('${x.id}')">
 🗑️ Trvale smazat
@@ -2317,13 +2323,15 @@ model:x.model||"",
 charge:x.charge||"",
 manufactured:x.manufactured||"",
 commissioned:x.commissioned||"",
+received:x.received||"",
+origin:x.origin||"",
 location,
 next:x.next||"",
 periodicTest:x.periodicTest||"",
 life:x.life||"",
 faults:x.faults||[],
 note:x.note||"",
-history:x.history||[]
+history:Array.isArray(x.history)?x.history.slice():[]
 
 };
 
@@ -2682,6 +2690,35 @@ data.stock.find(x=>x.id===id);
 if(!x)return;
 
 returnStock(id);
+
+}
+
+
+/* OBNOVENÍ VYŘAZENÉHO → SKLAD */
+
+function restoreRetiredToStock(id){
+
+const x=data.stock.find(x=>x.id===id);
+
+if(!x||x.status!=="retired")return;
+
+x.status="stock";
+x.retiredDate="";
+x.retiredReason="";
+x.manualRetireRestore=true;
+
+x.history=x.history||[];
+
+x.history.push({
+date:today(),
+action:"Obnoveno na sklad",
+result:"Sklad"
+});
+
+closeModal();
+save();
+
+alert("Hasičák byl vrácen na sklad.");
 
 }
 
