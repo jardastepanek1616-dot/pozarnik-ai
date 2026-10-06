@@ -59,13 +59,12 @@ nav button.active{color:#2563eb}
 <header>
 <div class="header">
 <div class="logo">🧯 Požárník AI</div>
-<div class="version">V0.3</div>
+<div class="version">V0.4</div>
 </div>
 </header>
 
 <main>
 
-<!-- PŘEHLED -->
 <section id="dashboard" class="screen active">
 
 <h1>Přehled</h1>
@@ -107,7 +106,6 @@ QR kód vede vždy na konkrétní zařízení.
 </section>
 
 
-<!-- OBJEKTY -->
 <section id="objectsScreen" class="screen">
 
 <div class="row">
@@ -127,7 +125,6 @@ QR kód vede vždy na konkrétní zařízení.
 </section>
 
 
-<!-- SKLAD -->
 <section id="stockScreen" class="screen">
 
 <h1>📦 Sklad</h1>
@@ -157,7 +154,6 @@ QR kód vede vždy na konkrétní zařízení.
 </section>
 
 
-<!-- ZPRÁVY -->
 <section id="reportsScreen" class="screen">
 
 <h1>Dokumentace</h1>
@@ -180,7 +176,6 @@ připraví hotový zápis z kontroly.
 </section>
 
 
-<!-- KONTROLY -->
 <section id="controlsScreen" class="screen">
 
 <h1>📅 Kontroly</h1>
@@ -233,7 +228,6 @@ připraví hotový zápis z kontroly.
 </section>
 
 
-<!-- VÍCE -->
 <section id="moreScreen" class="screen">
 
 <h1>Více</h1>
@@ -272,7 +266,6 @@ Obnoví fiktivní data pro prezentaci.
 </section>
 
 
-<!-- STATISTIKY -->
 <section id="statsScreen" class="screen">
 
 <h1>📊 Statistiky</h1>
@@ -333,18 +326,10 @@ Obnoví fiktivní data pro prezentaci.
 
 <script>
 
-/* =========================================================
-   POŽÁRNÍK AI V0.3
-   ========================================================= */
-
-const KEY="pozarnik_ai_v03";
+const KEY="pozarnik_ai_v04";
 let currentYear=2027;
 let activeCustomer="ALL";
 
-
-/* ---------------------------------------------------------
-   DATA
---------------------------------------------------------- */
 
 function demoData(){
 
@@ -413,9 +398,6 @@ history:[]
 objects.push(object);
 }
 
-
-/* aktivní závada */
-
 objects[0].devices[0].faults=["Nízký tlak"];
 objects[0].devices[0].note="Při kontrole zjištěn nízký tlak.";
 objects[0].devices[0].history.push({
@@ -425,26 +407,17 @@ result:"Závada",
 note:"Nízký tlak"
 });
 
-
-/* blížící se periodická zkouška */
-
 let soonTest=new Date();
 soonTest.setDate(soonTest.getDate()+18);
 
 objects[1].devices[0].periodicTest=
 soonTest.toISOString().slice(0,10);
 
-
-/* blížící se životnost */
-
 let soonLife=new Date();
 soonLife.setDate(soonLife.getDate()+25);
 
 objects[1].devices[1].life=
 soonLife.toISOString().slice(0,10);
-
-
-/* prošlá životnost */
 
 if(objects[2].devices.length){
 
@@ -456,10 +429,12 @@ expired.toISOString().slice(0,10);
 
 }
 
-
 return{
 customers:customers,
 objects:objects,
+
+/* OPRAVENO – údržba je nyní vždy vytvořená */
+maintenance:[],
 
 stock:[
 {
@@ -498,14 +473,11 @@ status:"maintenance"
 ],
 
 yearPlans:{}
+
 };
 
 }
 
-
-/* ---------------------------------------------------------
-   NAČTENÍ
---------------------------------------------------------- */
 
 let data;
 
@@ -521,9 +493,14 @@ localStorage.setItem(KEY,JSON.stringify(data));
 }
 
 
-/* ---------------------------------------------------------
-   POMOCNÉ
---------------------------------------------------------- */
+/* ZAJISTÍ KOMPATIBILITU SE STARŠÍMI DATY */
+
+data.maintenance=data.maintenance||[];
+data.stock=data.stock||[];
+data.yearPlans=data.yearPlans||[];
+data.customers=data.customers||[];
+data.objects=data.objects||[];
+
 
 function save(){
 localStorage.setItem(KEY,JSON.stringify(data));
@@ -550,24 +527,35 @@ return"Zařízení";
 
 function daysUntil(date){
 if(!date)return 99999;
+
 return Math.ceil(
 (new Date(date+"T00:00:00")-new Date(new Date().toDateString()))/86400000
 );
+
 }
 
 function status(device){
 
 if(device.faults?.length)return"fault";
-if(device.life&&daysUntil(device.life)<0)return"danger";
-if(device.periodicTest&&daysUntil(device.periodicTest)<=90)return"warning";
+
+if(device.life&&daysUntil(device.life)<0)
+return"danger";
+
+if(device.periodicTest&&daysUntil(device.periodicTest)<=90)
+return"warning";
+
 return"ok";
+
 }
 
 function statusText(s){
+
 if(s==="fault")return"ZÁVADA";
 if(s==="danger")return"PO EXPIRACI";
 if(s==="warning")return"MUSÍ NA ÚDRŽBU";
+
 return"V POŘÁDKU";
+
 }
 
 function objectStatus(object){
@@ -582,12 +570,11 @@ if(object.devices.some(d=>d.periodicTest&&daysUntil(d.periodicTest)<=90))
 return{type:"warning",text:"MUSÍ NA ÚDRŽBU"};
 
 return{type:"ok",text:"V POŘÁDKU"};
+
 }
 
 
-/* ---------------------------------------------------------
-   NAVIGACE
---------------------------------------------------------- */
+/* NAVIGACE */
 
 function show(id,button){
 
@@ -598,18 +585,20 @@ document.getElementById(id)
 .classList.add("active");
 
 if(button){
+
 document.querySelectorAll("nav button")
 .forEach(x=>x.classList.remove("active"));
+
 button.classList.add("active");
+
 }
 
 render();
+
 }
 
 
-/* ---------------------------------------------------------
-   RENDER
---------------------------------------------------------- */
+/* RENDER */
 
 function render(){
 
@@ -635,7 +624,8 @@ faultCount.textContent=
 devices.filter(d=>d.faults?.length).length;
 
 maintenanceNow.textContent=
-data.stock.filter(x=>x.status==="maintenance").length;
+data.stock.filter(x=>x.status==="maintenance").length+
+data.maintenance.length;
 
 renderAttention();
 renderRanking();
@@ -648,9 +638,7 @@ renderStats();
 }
 
 
-/* ---------------------------------------------------------
-   POZORNOST
---------------------------------------------------------- */
+/* POZORNOST */
 
 function renderAttention(){
 
@@ -696,9 +684,7 @@ Končí životnost
 }
 
 
-/* ---------------------------------------------------------
-   RANKING
---------------------------------------------------------- */
+/* RANKING */
 
 function renderRanking(){
 
@@ -721,12 +707,11 @@ list.slice(0,8).map((x,i)=>`
 `).join("")
 :
 `<div class="card muted">Zatím žádné závady.</div>`;
+
 }
 
 
-/* ---------------------------------------------------------
-   OBJEKTY
---------------------------------------------------------- */
+/* OBJEKTY */
 
 function renderObjects(){
 
@@ -772,9 +757,11 @@ ${s.text}
 </div>
 
 <div class="actions">
+
 <button class="light" onclick="event.stopPropagation();openObject('${o.id}')">
 OTEVŘÍT
 </button>
+
 </div>
 
 </div>
@@ -786,9 +773,7 @@ OTEVŘÍT
 }
 
 
-/* ---------------------------------------------------------
-   ZÁKAZNÍCI
---------------------------------------------------------- */
+/* ZÁKAZNÍCI */
 
 function renderCustomers(){
 
@@ -832,9 +817,7 @@ return`
 }
 
 
-/* ---------------------------------------------------------
-   DETAIL OBJEKTU
---------------------------------------------------------- */
+/* DETAIL OBJEKTU */
 
 function openObject(id){
 
@@ -872,6 +855,7 @@ html+=deviceCard(d,object);
 
 html+=`
 <div class="actions">
+
 <button class="primary" onclick="newDevice('${id}')">
 + Přidat zařízení
 </button>
@@ -879,6 +863,7 @@ html+=`
 <button class="gray" onclick="closeModal()">
 Zavřít
 </button>
+
 </div>
 `;
 
@@ -887,9 +872,7 @@ openModal(html);
 }
 
 
-/* ---------------------------------------------------------
-   KARTA ZAŘÍZENÍ
---------------------------------------------------------- */
+/* KARTA ZAŘÍZENÍ */
 
 function deviceCard(d,o){
 
@@ -934,9 +917,7 @@ DETAIL
 }
 
 
-/* ---------------------------------------------------------
-   DETAIL ZAŘÍZENÍ
---------------------------------------------------------- */
+/* DETAIL ZAŘÍZENÍ */
 
 function openDevice(oid,did){
 
@@ -1004,6 +985,16 @@ onclick="sendMaintenance('${oid}','${did}')">
 🔧 Údržba
 </button>
 
+${
+d.type!=="HYDRANT"
+?
+`<button class="green"
+onclick="moveDeviceToStock('${oid}','${did}')">
+📦 Na sklad
+</button>`
+:""
+}
+
 <button class="light"
 onclick="showQR('${oid}','${did}')">
 ▣ QR
@@ -1042,9 +1033,7 @@ openModal(html);
 }
 
 
-/* ---------------------------------------------------------
-   KONTROLA
---------------------------------------------------------- */
+/* KONTROLA */
 
 const extinguisher=[
 "Vnější stav přístroje",
@@ -1174,9 +1163,7 @@ alert("Kontrola uložena.");
 }
 
 
-/* ---------------------------------------------------------
-   ZÁVADA
---------------------------------------------------------- */
+/* ZÁVADA */
 
 function reportFault(oid,did){
 
@@ -1243,14 +1230,19 @@ alert("Závada uložena.");
 }
 
 
-/* ---------------------------------------------------------
-   ÚDRŽBA
---------------------------------------------------------- */
+/* ÚDRŽBA */
 
 function sendMaintenance(oid,did){
 
 const o=data.objects.find(x=>x.id===oid);
 const d=o.devices.find(x=>x.id===did);
+
+if(!o||!d){
+alert("Zařízení nebylo nalezeno.");
+return;
+}
+
+data.maintenance=data.maintenance||[];
 
 if(data.maintenance.some(x=>x.deviceId===d.id)){
 alert("Zařízení už je na údržbě.");
@@ -1262,6 +1254,10 @@ deviceId:d.id,
 objectId:o.id,
 objectName:o.name,
 type:d.type,
+maker:d.maker||"",
+serial:d.serial||"",
+model:d.model||"",
+charge:d.charge||"",
 sentDate:new Date().toISOString().slice(0,10)
 });
 
@@ -1281,9 +1277,59 @@ alert("Zařízení bylo posláno na údržbu.");
 }
 
 
-/* ---------------------------------------------------------
-   SKLAD
---------------------------------------------------------- */
+/* PŘESUN ZAŘÍZENÍ NA SKLAD */
+
+function moveDeviceToStock(oid,did){
+
+const o=data.objects.find(x=>x.id===oid);
+
+if(!o)return;
+
+const index=o.devices.findIndex(x=>x.id===did);
+
+if(index===-1){
+alert("Zařízení nebylo nalezeno.");
+return;
+}
+
+const d=o.devices[index];
+
+if(d.type==="HYDRANT"){
+alert("Hydrant nelze přidat do skladu hasičáků.");
+return;
+}
+
+if(data.stock.some(x=>x.id===d.id)){
+alert("Toto zařízení už je ve skladu.");
+return;
+}
+
+data.stock.push({
+id:d.id,
+type:d.type,
+maker:d.maker||"",
+serial:d.serial||"",
+model:d.model||"",
+charge:d.charge||"",
+received:new Date().toISOString().slice(0,10),
+origin:o.name+" — "+o.address,
+status:"stock",
+qrId:d.qrId||d.id,
+location:d.location||"",
+history:d.history||[]
+});
+
+o.devices.splice(index,1);
+
+closeModal();
+save();
+
+alert("Hasičák byl přidán na sklad.");
+
+}
+
+
+/* SKLAD */
 
 function renderStock(){
 
@@ -1365,6 +1411,8 @@ function stockDetail(id){
 
 const x=data.stock.find(x=>x.id===id);
 
+if(!x)return;
+
 openModal(`
 <h2>🧯 ${x.id}</h2>
 
@@ -1376,17 +1424,36 @@ ${x.status==="maintenance"?"NA ÚDRŽBĚ":"NA SKLADĚ"}
 
 <p class="muted">
 Typ: <b>${typeName(x.type)}</b><br>
-Výrobce: <b>${x.maker}</b><br>
-Výrobní číslo: <b>${x.serial}</b><br>
-Model: <b>${x.model}</b><br>
-Náplň: <b>${x.charge}</b><br>
-Přijato: <b>${x.received}</b><br>
-Odkud: <b>${x.origin}</b>
+Výrobce: <b>${x.maker||"—"}</b><br>
+Výrobní číslo: <b>${x.serial||"—"}</b><br>
+Model: <b>${x.model||"—"}</b><br>
+Náplň: <b>${x.charge||"—"}</b><br>
+Přijato: <b>${x.received||"—"}</b><br>
+Odkud: <b>${x.origin||"—"}</b><br>
+QR ID: <b>${x.qrId||x.id}</b>
 </p>
 
 </div>
 
-<button class="gray" onclick="closeModal()">Zavřít</button>
+<div class="actions">
+
+${
+x.status==="maintenance"
+?
+`<button class="green" onclick="returnStock('${x.id}')">
+↩️ Vrátit na sklad
+</button>`
+:
+`<button class="orange" onclick="stockMaintenance('${x.id}')">
+🔧 Poslat na údržbu
+</button>`
+}
+
+<button class="gray" onclick="closeModal()">
+Zavřít
+</button>
+
+</div>
 `);
 
 }
@@ -1394,6 +1461,8 @@ Odkud: <b>${x.origin}</b>
 function stockMaintenance(id){
 
 const x=data.stock.find(x=>x.id===id);
+
+if(!x)return;
 
 x.status="maintenance";
 x.sentDate=new Date().toISOString().slice(0,10);
@@ -1405,6 +1474,8 @@ save();
 function returnStock(id){
 
 const x=data.stock.find(x=>x.id===id);
+
+if(!x)return;
 
 x.status="stock";
 x.returnedDate=new Date().toISOString().slice(0,10);
@@ -1443,9 +1514,7 @@ save();
 }
 
 
-/* ---------------------------------------------------------
-   QR
---------------------------------------------------------- */
+/* QR */
 
 function scanQR(){
 
@@ -1456,17 +1525,23 @@ const id=prompt(
 
 if(!id)return;
 
-const device=allDevices().find(d=>d.id===id||d.qrId===id);
+const cleanId=id.trim();
+
+const device=allDevices().find(d=>
+d.id===cleanId||d.qrId===cleanId
+);
 
 if(device){
 openDevice(device.object.id,device.id);
 return;
 }
 
-const stock=data.stock.find(x=>x.id===id);
+const stock=data.stock.find(x=>
+x.id===cleanId||x.qrId===cleanId
+);
 
 if(stock){
-stockDetail(id);
+stockDetail(stock.id);
 return;
 }
 
@@ -1474,7 +1549,7 @@ openModal(`
 <h2>🆕 Nový QR</h2>
 
 <div class="card">
-<b>${id}</b>
+<b>${cleanId}</b>
 <p class="muted">
 Tento QR kód zatím není v systému.
 </p>
@@ -1483,12 +1558,12 @@ Tento QR kód zatím není v systému.
 <div class="actions">
 
 <button class="primary"
-onclick="newQRStock('${id}')">
+onclick="newQRStock('${cleanId}')">
 📦 Přidat do skladu
 </button>
 
 <button class="green"
-onclick="newQRObject('${id}')">
+onclick="newQRObject('${cleanId}')">
 🏢 Přidat do objektu
 </button>
 
@@ -1502,14 +1577,18 @@ Zrušit
 }
 
 
-/* ---------------------------------------------------------
-   NOVÝ QR → SKLAD
---------------------------------------------------------- */
+/* NOVÝ QR → SKLAD */
 
 function newQRStock(id){
 
+if(data.stock.some(x=>x.id===id)){
+alert("Tento QR už je ve skladu.");
+return;
+}
+
 data.stock.push({
 id:id,
+qrId:id,
 type:"PRASKOVY",
 maker:prompt("Výrobce:")||"",
 serial:prompt("Výrobní číslo:")||"",
@@ -1526,9 +1605,7 @@ save();
 }
 
 
-/* ---------------------------------------------------------
-   NOVÝ QR → OBJEKT
---------------------------------------------------------- */
+/* NOVÝ QR → OBJEKT */
 
 function newQRObject(id){
 
@@ -1581,6 +1658,8 @@ const o=data.objects.find(
 x=>x.id===document.getElementById("qrObject").value
 );
 
+if(!o)return;
+
 o.devices.push({
 
 id:id,
@@ -1617,9 +1696,7 @@ save();
 }
 
 
-/* ---------------------------------------------------------
-   QR ZOBRAZENÍ
---------------------------------------------------------- */
+/* QR ZOBRAZENÍ */
 
 function showQR(oid,did){
 
@@ -1657,9 +1734,7 @@ Zavřít
 }
 
 
-/* ---------------------------------------------------------
-   PLÁN
---------------------------------------------------------- */
+/* PLÁN */
 
 function getPlan(year){
 
@@ -1760,9 +1835,7 @@ ${objectDone(o,currentYear)?"HOTOVO":"ČEKÁ"}
 }
 
 
-/* ---------------------------------------------------------
-   ŘÍJEN
---------------------------------------------------------- */
+/* ŘÍJEN */
 
 function selectOctober(){
 
@@ -1837,9 +1910,7 @@ save();
 }
 
 
-/* ---------------------------------------------------------
-   NOVÝ OBJEKT
---------------------------------------------------------- */
+/* NOVÝ OBJEKT */
 
 function newObject(){
 
@@ -1894,9 +1965,7 @@ save();
 }
 
 
-/* ---------------------------------------------------------
-   NOVÉ ZAŘÍZENÍ
---------------------------------------------------------- */
+/* NOVÉ ZAŘÍZENÍ */
 
 function newDevice(oid){
 
@@ -1984,9 +2053,7 @@ openObject(oid);
 }
 
 
-/* ---------------------------------------------------------
-   STATISTIKY
---------------------------------------------------------- */
+/* STATISTIKY */
 
 function renderStats(){
 
@@ -2048,9 +2115,7 @@ Object.entries(s)
 }
 
 
-/* ---------------------------------------------------------
-   ZÁLOHA
---------------------------------------------------------- */
+/* ZÁLOHA */
 
 function exportData(){
 
@@ -2081,6 +2146,10 @@ try{
 
 data=JSON.parse(reader.result);
 
+data.maintenance=data.maintenance||[];
+data.stock=data.stock||[];
+data.yearPlans=data.yearPlans||[];
+
 localStorage.setItem(
 KEY,
 JSON.stringify(data)
@@ -2103,9 +2172,7 @@ reader.readAsText(file);
 }
 
 
-/* ---------------------------------------------------------
-   OBNOVIT FIKTIVNÍ DATA
---------------------------------------------------------- */
+/* OBNOVIT FIKTIVNÍ DATA */
 
 function resetDemo(){
 
@@ -2132,9 +2199,7 @@ alert(
 }
 
 
-/* ---------------------------------------------------------
-   MODAL
---------------------------------------------------------- */
+/* MODAL */
 
 function openModal(html){
 
@@ -2150,9 +2215,7 @@ document.getElementById("modal").classList.remove("open");
 }
 
 
-/* ---------------------------------------------------------
-   START
---------------------------------------------------------- */
+/* START */
 
 render();
 
