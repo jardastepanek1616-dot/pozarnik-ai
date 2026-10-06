@@ -247,7 +247,7 @@ padding:0;
 
 <section id="reportsScreen" class="screen">
 
-<h1>📄 Dokumentace</h1>
+<h1>📄 Zprávy</h1>
 
 <div class="card">
 <b>📄 Kontrolní zprávy</b>
@@ -401,8 +401,19 @@ závad, poznámek a fotografií.
 <script>
 
 const KEY="pozarnik_ai_v04";
+
 let currentYear=2027;
 let activeCustomer="ALL";
+
+/* =========================================================
+   PROTOKOL - AKTUÁLNĚ OTEVŘENÉ NASTAVENÍ
+   ========================================================= */
+
+let currentReportSettings={};
+
+/* =========================================================
+   DEMO DATA
+   ========================================================= */
 
 function demoData(){
 
@@ -571,6 +582,10 @@ data.customers=data.customers||[];
 data.objects=data.objects||[];
 data.reports=data.reports||[];
 
+/* =========================================================
+   MIGRACE
+   ========================================================= */
+
 function migrateOldMaintenance(){
 
 if(!data.maintenance.length)return;
@@ -687,6 +702,10 @@ new Date(new Date().toDateString()))/86400000
 
 }
 
+/* =========================================================
+   AUTOMATICKÉ VYŘAZENÍ
+   ========================================================= */
+
 function autoRetireExpired(){
 
 let changed=false;
@@ -760,6 +779,10 @@ localStorage.setItem(KEY,JSON.stringify(data));
 
 }
 
+/* =========================================================
+   STAVY
+   ========================================================= */
+
 function status(device){
 
 if(device.faults?.length)return"fault";
@@ -797,13 +820,20 @@ return{type:"ok",text:"V POŘÁDKU"};
 
 }
 
+/* =========================================================
+   NAVIGACE
+   ========================================================= */
+
 function show(id,button){
 
 document.querySelectorAll(".screen")
 .forEach(x=>x.classList.remove("active"));
 
-document.getElementById(id)
-.classList.add("active");
+const screen=document.getElementById(id);
+
+if(!screen)return;
+
+screen.classList.add("active");
 
 if(button){
 
@@ -818,6 +848,10 @@ render();
 
 }
 
+/* =========================================================
+   HLAVNÍ RENDER
+   ========================================================= */
+
 function render(){
 
 autoRetireExpired();
@@ -830,12 +864,14 @@ devicesCount.textContent=devices.length;
 
 maintenanceYear.textContent=
 devices.filter(d=>
+d.type!=="HYDRANT" &&
 d.periodicTest &&
 new Date(d.periodicTest).getFullYear()===year
 ).length;
 
 lifeYear.textContent=
 devices.filter(d=>
+d.type!=="HYDRANT" &&
 d.life &&
 new Date(d.life).getFullYear()===year
 ).length;
@@ -856,6 +892,10 @@ renderStats();
 renderReports();
 
 }
+
+/* =========================================================
+   POZORNOST
+   ========================================================= */
 
 function renderAttention(){
 
@@ -890,22 +930,22 @@ x.type==="test"
 ?
 
 `<div class="alert warning">
-<b>🔧 ${x.d.id}</b> — ${typeName(x.d.type)}
+<b>🔧 ${escapeHtml(x.d.id)}</b> — ${typeName(x.d.type)}
 <br>Bude muset na periodickou zkoušku
 <br>
 <span class="small">
-${x.d.periodicTest} • ${x.d.object.name}
+${escapeHtml(x.d.periodicTest)} • ${escapeHtml(x.d.object.name)}
 </span>
 </div>`
 
 :
 
 `<div class="alert purple">
-<b>⏳ ${x.d.id}</b> — ${typeName(x.d.type)}
+<b>⏳ ${escapeHtml(x.d.id)}</b> — ${typeName(x.d.type)}
 <br>Končí životnost
 <br>
 <span class="small">
-${x.d.life} • ${x.d.object.name}
+${escapeHtml(x.d.life)} • ${escapeHtml(x.d.object.name)}
 </span>
 </div>`
 
@@ -918,6 +958,10 @@ ${x.d.life} • ${x.d.object.name}
 </div>`;
 
 }
+
+/* =========================================================
+   RANKING
+   ========================================================= */
 
 function renderRanking(){
 
@@ -935,7 +979,7 @@ list.slice(0,8).map((x,i)=>`
 
 <div class="card">
 <div class="row">
-<b>${i+1}. ${x.name}</b>
+<b>${escapeHtml(i+1)}. ${escapeHtml(x.name)}</b>
 <span class="badge fault">${x.count} závad</span>
 </div>
 </div>
@@ -950,9 +994,13 @@ Zatím žádné závady.
 
 }
 
+/* =========================================================
+   OBJEKTY
+   ========================================================= */
+
 function renderObjects(){
 
-const q=(objectSearch.value||"").toLowerCase();
+const q=(document.getElementById("objectSearch")?.value||"").toLowerCase();
 
 let list=data.objects.filter(o=>
 (
@@ -982,9 +1030,9 @@ return`
 <div class="row">
 
 <div>
-<b>🏢 ${o.name}</b>
-<div class="muted">${customerName(o.customerId)}</div>
-<div class="small">${o.address}</div>
+<b>🏢 ${escapeHtml(o.name)}</b>
+<div class="muted">${escapeHtml(customerName(o.customerId))}</div>
+<div class="small">${escapeHtml(o.address)}</div>
 </div>
 
 <span class="badge ${s.type}">
@@ -1034,7 +1082,7 @@ ${data.customers.map(c=>`
 <button
 class="${activeCustomer===c.id?"primary":"light"}"
 onclick="activeCustomer='${c.id}';render()">
-${c.name}
+${escapeHtml(c.name)}
 </button>
 
 `).join("")}
@@ -1054,7 +1102,7 @@ return`
 <div class="card">
 
 <div class="row">
-<b>🏢 ${c.name}</b>
+<b>🏢 ${escapeHtml(c.name)}</b>
 <span class="badge ok">
 ${objects.length} objektů
 </span>
@@ -1070,17 +1118,23 @@ ${devices} zařízení
 
 }
 
+/* =========================================================
+   DETAIL OBJEKTU
+   ========================================================= */
+
 function openObject(id){
 
 const object=data.objects.find(o=>o.id===id);
 
+if(!object)return;
+
 let html=`
 
-<h2>🏢 ${object.name}</h2>
+<h2>🏢 ${escapeHtml(object.name)}</h2>
 
 <p class="muted">
-${customerName(object.customerId)}<br>
-${object.address}
+${escapeHtml(customerName(object.customerId))}<br>
+${escapeHtml(object.address)}
 </p>
 
 <div class="big ${objectStatus(object).type}">
@@ -1138,6 +1192,10 @@ openModal(html);
 
 }
 
+/* =========================================================
+   KARTA ZAŘÍZENÍ
+   ========================================================= */
+
 function deviceCard(d,o){
 
 return`
@@ -1147,10 +1205,10 @@ return`
 <div class="row">
 
 <div>
-<b>🧯 ${d.id}</b>
+<b>🧯 ${escapeHtml(d.id)}</b>
 <div class="muted">${typeName(d.type)}</div>
 <div class="small">
-${d.location||"Umístění neuvedeno"}
+${escapeHtml(d.location||"Umístění neuvedeno")}
 </div>
 </div>
 
@@ -1163,13 +1221,13 @@ ${statusText(status(d))}
 <div class="small" style="margin-top:10px">
 
 Další kontrola:
-<b>${d.next||"—"}</b><br>
+<b>${escapeHtml(d.next||"—")}</b><br>
 
 Periodická zkouška:
-<b>${d.periodicTest||"—"}</b><br>
+<b>${escapeHtml(d.periodicTest||"—")}</b><br>
 
 Konec životnosti:
-<b>${d.life||"—"}</b>
+<b>${escapeHtml(d.life||"—")}</b>
 
 </div>
 
@@ -1191,6 +1249,10 @@ DETAIL
 
 }
 
+/* =========================================================
+   DETAIL ZAŘÍZENÍ
+   ========================================================= */
+
 function openDevice(oid,did){
 
 const o=data.objects.find(x=>x.id===oid);
@@ -1207,13 +1269,13 @@ d.history.slice().reverse().map(h=>`
 
 <div class="row">
 <div>
-<b>${h.date}</b> — ${h.action}
+<b>${escapeHtml(h.date)}</b> — ${escapeHtml(h.action)}
 </div>
 </div>
 
 <div class="small" style="margin-top:5px">
-${h.result||""}
-${h.note?" • "+h.note:""}
+${escapeHtml(h.result||"")}
+${h.note?" • "+escapeHtml(h.note):""}
 </div>
 
 ${h.photo
@@ -1235,7 +1297,7 @@ alt="Fotografie z historie"
 
 openModal(`
 
-<h2>🧯 ${d.id}</h2>
+<h2>🧯 ${escapeHtml(d.id)}</h2>
 
 <div class="card">
 
@@ -1243,10 +1305,10 @@ openModal(`
 ${typeName(d.type)}
 </div>
 
-<h3>${o.name}</h3>
+<h3>${escapeHtml(o.name)}</h3>
 
 <div class="muted">
-${customerName(o.customerId)} • ${d.location}
+${escapeHtml(customerName(o.customerId))} • ${escapeHtml(d.location)}
 </div>
 
 <div class="big ${status(d)}">
@@ -1256,28 +1318,28 @@ ${statusText(status(d))}
 <p class="muted">
 
 Výrobce:
-<b>${d.maker||"—"}</b><br>
+<b>${escapeHtml(d.maker||"—")}</b><br>
 
 Výrobní číslo:
-<b>${d.serial||"—"}</b><br>
+<b>${escapeHtml(d.serial||"—")}</b><br>
 
 Model:
-<b>${d.model||"—"}</b><br>
+<b>${escapeHtml(d.model||"—")}</b><br>
 
 Náplň:
-<b>${d.charge||"—"}</b><br>
+<b>${escapeHtml(d.charge||"—")}</b><br>
 
 QR ID:
-<b>${d.qrId}</b><br>
+<b>${escapeHtml(d.qrId||d.id)}</b><br>
 
 Další kontrola:
-<b>${d.next||"—"}</b><br>
+<b>${escapeHtml(d.next||"—")}</b><br>
 
 Periodická zkouška:
-<b>${d.periodicTest||"—"}</b><br>
+<b>${escapeHtml(d.periodicTest||"—")}</b><br>
 
 Konec životnosti:
-<b>${d.life||"—"}</b>
+<b>${escapeHtml(d.life||"—")}</b>
 
 </p>
 
@@ -1285,7 +1347,7 @@ ${d.note
 ?
 `<div class="alert warning">
 <b>📝 Poznámka</b><br>
-${d.note}
+${escapeHtml(d.note)}
 </div>`
 :""}
 
@@ -1293,7 +1355,7 @@ ${d.faults?.length
 ?
 `<div class="alert danger">
 <b>⚠️ Aktivní závada</b><br>
-${d.faults.join("<br>")}
+${d.faults.map(escapeHtml).join("<br>")}
 </div>`
 :""}
 
@@ -1352,6 +1414,10 @@ Zavřít
 `);
 
 }
+
+/* =========================================================
+   KONTROLA
+   ========================================================= */
 
 const extinguisher=[
 "Vnější stav přístroje",
@@ -1463,10 +1529,10 @@ extinguisher;
 
 let html=`
 
-<h2>Kontrola ${d.id}</h2>
+<h2>Kontrola ${escapeHtml(d.id)}</h2>
 
 <p class="muted">
-${o.name} • ${typeName(d.type)}
+${escapeHtml(o.name)} • ${typeName(d.type)}
 </p>`;
 
 list.forEach(x=>{
@@ -1477,7 +1543,7 @@ html+=`
 
 <input type="checkbox" class="checkItem">
 
-<span>${x}</span>
+<span>${escapeHtml(x)}</span>
 
 </label>`;
 
@@ -1494,7 +1560,7 @@ Bez závady
 </option>
 
 ${faults.map(x=>
-`<option>${x}</option>`
+`<option>${escapeHtml(x)}</option>`
 ).join("")}
 
 </select>
@@ -1630,6 +1696,10 @@ photo
 
 }
 
+/* =========================================================
+   ZÁVADY
+   ========================================================= */
+
 function reportFault(oid,did){
 
 openModal(`
@@ -1641,7 +1711,7 @@ openModal(`
 <select id="faultType">
 
 ${faults.map(x=>
-`<option>${x}</option>`
+`<option>${escapeHtml(x)}</option>`
 ).join("")}
 
 </select>
@@ -1742,6 +1812,10 @@ photo
 
 }
 
+/* =========================================================
+   OBJEKT → SKLAD / ÚDRŽBA
+   ========================================================= */
+
 function moveObjectToStock(
 oid,
 did,
@@ -1836,6 +1910,10 @@ alert(
 
 }
 
+/* =========================================================
+   SKLAD
+   ========================================================= */
+
 function renderStock(){
 
 const stock=
@@ -1901,7 +1979,7 @@ return`
 
 <div>
 
-<b>🧯 ${x.id}</b>
+<b>🧯 ${escapeHtml(x.id)}</b>
 
 <div class="muted">
 ${typeName(x.type)}
@@ -1930,16 +2008,16 @@ ${maintenance
 <div class="small">
 
 <b>Výrobce:</b>
-${x.maker||"—"}<br>
+${escapeHtml(x.maker||"—")}<br>
 
 <b>Výrobní číslo:</b>
-${x.serial||"—"}<br>
+${escapeHtml(x.serial||"—")}<br>
 
 <b>Odkud:</b>
-${x.origin||"—"}<br>
+${escapeHtml(x.origin||"—")}<br>
 
 <b>Původní umístění:</b>
-${x.originalLocation||x.location||"—"}
+${escapeHtml(x.originalLocation||x.location||"—")}
 
 </div>
 
@@ -1992,7 +2070,7 @@ return`
 
 <div>
 
-<b>🗄️ ${x.id}</b>
+<b>🗄️ ${escapeHtml(x.id)}</b>
 
 <div class="muted">
 ${typeName(x.type)}
@@ -2009,22 +2087,22 @@ VYŘAZENÝ
 <div class="small">
 
 <b>Výrobce:</b>
-${x.maker||"—"}<br>
+${escapeHtml(x.maker||"—")}<br>
 
 <b>Výrobní číslo:</b>
-${x.serial||"—"}<br>
+${escapeHtml(x.serial||"—")}<br>
 
 <b>Původní objekt:</b>
-${x.originalObjectName||"—"}<br>
+${escapeHtml(x.originalObjectName||"—")}<br>
 
 <b>Umístění:</b>
-${x.originalLocation||"—"}<br>
+${escapeHtml(x.originalLocation||"—")}<br>
 
 <b>Důvod:</b>
-${x.retiredReason||"—"}<br>
+${escapeHtml(x.retiredReason||"—")}<br>
 
 <b>Datum:</b>
-${x.retiredDate||"—"}
+${escapeHtml(x.retiredDate||"—")}
 
 </div>
 
@@ -2056,6 +2134,10 @@ onclick="deleteRetired('${x.id}')">
 
 }
 
+/* =========================================================
+   DETAIL SKLADU
+   ========================================================= */
+
 function stockDetail(id){
 
 const x=data.stock.find(x=>x.id===id);
@@ -2066,7 +2148,7 @@ if(x.status==="retired"){
 
 openModal(`
 
-<h2>🗄️ ${x.id}</h2>
+<h2>🗄️ ${escapeHtml(x.id)}</h2>
 
 <div class="card">
 
@@ -2080,34 +2162,34 @@ Typ:
 <b>${typeName(x.type)}</b><br>
 
 Výrobce:
-<b>${x.maker||"—"}</b><br>
+<b>${escapeHtml(x.maker||"—")}</b><br>
 
 Výrobní číslo:
-<b>${x.serial||"—"}</b><br>
+<b>${escapeHtml(x.serial||"—")}</b><br>
 
 Model:
-<b>${x.model||"—"}</b><br>
+<b>${escapeHtml(x.model||"—")}</b><br>
 
 Náplň:
-<b>${x.charge||"—"}</b><br>
+<b>${escapeHtml(x.charge||"—")}</b><br>
 
 Výroba:
-<b>${x.manufactured||"—"}</b><br>
+<b>${escapeHtml(x.manufactured||"—")}</b><br>
 
 Původní objekt:
-<b>${x.originalObjectName||"—"}</b><br>
+<b>${escapeHtml(x.originalObjectName||"—")}</b><br>
 
 Původní umístění:
-<b>${x.originalLocation||"—"}</b><br>
+<b>${escapeHtml(x.originalLocation||"—")}</b><br>
 
 Důvod vyřazení:
-<b>${x.retiredReason||"—"}</b><br>
+<b>${escapeHtml(x.retiredReason||"—")}</b><br>
 
 Datum vyřazení:
-<b>${x.retiredDate||"—"}</b><br>
+<b>${escapeHtml(x.retiredDate||"—")}</b><br>
 
 QR ID:
-<b>${x.qrId||x.id}</b>
+<b>${escapeHtml(x.qrId||x.id)}</b>
 
 </p>
 
@@ -2148,7 +2230,7 @@ x.status==="maintenance";
 
 openModal(`
 
-<h2>🧯 ${x.id}</h2>
+<h2>🧯 ${escapeHtml(x.id)}</h2>
 
 <div class="card">
 
@@ -2174,37 +2256,37 @@ Typ:
 <b>${typeName(x.type)}</b><br>
 
 Výrobce:
-<b>${x.maker||"—"}</b><br>
+<b>${escapeHtml(x.maker||"—")}</b><br>
 
 Výrobní číslo:
-<b>${x.serial||"—"}</b><br>
+<b>${escapeHtml(x.serial||"—")}</b><br>
 
 Model:
-<b>${x.model||"—"}</b><br>
+<b>${escapeHtml(x.model||"—")}</b><br>
 
 Náplň:
-<b>${x.charge||"—"}</b><br>
+<b>${escapeHtml(x.charge||"—")}</b><br>
 
 Výroba:
-<b>${x.manufactured||"—"}</b><br>
+<b>${escapeHtml(x.manufactured||"—")}</b><br>
 
 Přijato:
-<b>${x.received||"—"}</b><br>
+<b>${escapeHtml(x.received||"—")}</b><br>
 
 Odkud:
-<b>${x.origin||"—"}</b><br>
+<b>${escapeHtml(x.origin||"—")}</b><br>
 
 Původní objekt:
-<b>${x.originalObjectName||"—"}</b><br>
+<b>${escapeHtml(x.originalObjectName||"—")}</b><br>
 
 Původní umístění:
-<b>${x.originalLocation||"—"}</b><br>
+<b>${escapeHtml(x.originalLocation||"—")}</b><br>
 
 Konec životnosti:
-<b>${x.life||"—"}</b><br>
+<b>${escapeHtml(x.life||"—")}</b><br>
 
 QR ID:
-<b>${x.qrId||x.id}</b>
+<b>${escapeHtml(x.qrId||x.id)}</b>
 
 </p>
 
@@ -2315,6 +2397,10 @@ alert(
 
 }
 
+/* =========================================================
+   VRÁCENÍ DO OBJEKTU
+   ========================================================= */
+
 function returnStock(id){
 
 const x=data.stock.find(x=>x.id===id);
@@ -2336,7 +2422,7 @@ openModal(`
 
 <div>
 
-<b>🧯 ${x.id}</b>
+<b>🧯 ${escapeHtml(x.id)}</b>
 
 <div class="muted">
 ${typeName(x.type)}
@@ -2372,9 +2458,9 @@ ${original
 
 <b>Původní místo:</b><br>
 
-🏢 ${original.name}<br>
+🏢 ${escapeHtml(original.name)}<br>
 
-📍 ${x.originalLocation||"Umístění neuvedeno"}
+📍 ${escapeHtml(x.originalLocation||"Umístění neuvedeno")}
 
 </div>
 
@@ -2418,8 +2504,8 @@ value="${o.id}"
 ${original?.id===o.id?"selected":""}
 >
 
-${o.name} —
-${customerName(o.customerId)}
+${escapeHtml(o.name)} —
+${escapeHtml(customerName(o.customerId))}
 
 </option>
 
@@ -2431,7 +2517,7 @@ ${customerName(o.customerId)}
 
 <input
 id="returnLocation"
-value="${x.originalLocation||x.location||""}"
+value="${escapeHtml(x.originalLocation||x.location||"")}"
 placeholder="3. patro – chodba">
 
 <div class="actions">
@@ -2540,6 +2626,10 @@ location+
 openObject(o.id);
 
 }
+
+/* =========================================================
+   VYŘAZENÍ
+   ========================================================= */
 
 function retireStock(id){
 
@@ -2655,15 +2745,15 @@ openModal(`
 
 <div class="card">
 
-<b>🧯 ${d.id}</b>
+<b>🧯 ${escapeHtml(d.id)}</b>
 
 <div class="muted">
 ${typeName(d.type)}
 </div>
 
 <p class="small">
-🏢 ${o.name}<br>
-📍 ${d.location||"Umístění neuvedeno"}
+🏢 ${escapeHtml(o.name)}<br>
+📍 ${escapeHtml(d.location||"Umístění neuvedeno")}
 </p>
 
 </div>
@@ -2689,9 +2779,7 @@ onclick="saveRetireObjectDevice('${oid}','${did}')">
 <button
 class="gray"
 onclick="closeModal()">
-
 Zrušit
-
 </button>
 
 </div>
@@ -2753,6 +2841,10 @@ alert(
 
 }
 
+/* =========================================================
+   TRVALÉ SMAZÁNÍ
+   ========================================================= */
+
 function deleteRetired(id){
 
 const x=
@@ -2767,7 +2859,7 @@ openModal(`
 
 <div class="alert danger">
 
-<b>${x.id}</b><br>
+<b>${escapeHtml(x.id)}</b><br>
 
 Tato akce odstraní hasičák úplně ze systému.
 
@@ -2879,6 +2971,10 @@ alert("Hasičák byl vrácen na sklad.");
 
 }
 
+/* =========================================================
+   PŘIDÁNÍ NA SKLAD
+   ========================================================= */
+
 function addStock(){
 
 const type=
@@ -2960,6 +3056,10 @@ save();
 
 }
 
+/* =========================================================
+   QR
+   ========================================================= */
+
 function scanQR(){
 
 const id=
@@ -3009,7 +3109,7 @@ openModal(`
 
 <div class="card">
 
-<b>${cleanId}</b>
+<b>${escapeHtml(cleanId)}</b>
 
 <p class="muted">
 Tento QR kód zatím není v systému.
@@ -3124,8 +3224,8 @@ openModal(`
 ${data.objects.map(o=>`
 
 <option value="${o.id}">
-${o.name} —
-${customerName(o.customerId)}
+${escapeHtml(o.name)} —
+${escapeHtml(customerName(o.customerId))}
 </option>
 
 `).join("")}
@@ -3248,14 +3348,14 @@ openModal(`
 
 <div style="text-align:center">
 
-<h3>${d.qrId}</h3>
+<h3>${escapeHtml(d.qrId)}</h3>
 
 <div class="muted">
 ${typeName(d.type)}
 </div>
 
 <div class="small">
-${o.name}
+${escapeHtml(o.name)}
 </div>
 
 </div>
@@ -3291,7 +3391,7 @@ openModal(`
 
 <div style="text-align:center">
 
-<h3>${x.qrId||x.id}</h3>
+<h3>${escapeHtml(x.qrId||x.id)}</h3>
 
 <div class="muted">
 ${typeName(x.type)}
@@ -3308,6 +3408,10 @@ Zavřít
 `);
 
 }
+
+/* =========================================================
+   ROČNÍ PLÁN
+   ========================================================= */
 
 function getPlan(year){
 
@@ -3425,7 +3529,7 @@ april.map(o=>`
 
 <div class="plan">
 
-<b>🏢 ${o.name}</b>
+<b>🏢 ${escapeHtml(o.name)}</b>
 
 <span class="badge ${
 objectDone(o,currentYear)
@@ -3458,7 +3562,7 @@ oct.map(o=>`
 
 <div class="plan">
 
-<b>🏢 ${o.name}</b>
+<b>🏢 ${escapeHtml(o.name)}</b>
 
 <span class="badge ${
 objectDone(o,currentYear)
@@ -3520,12 +3624,12 @@ ${selected.includes(o.id)?"checked":""}
 
 <span>
 
-<b>${o.name}</b><br>
+<b>${escapeHtml(o.name)}</b><br>
 
 <span class="small">
-${customerName(o.customerId)}
+${escapeHtml(customerName(o.customerId))}
 •
-${o.address}
+${escapeHtml(o.address)}
 </span>
 
 </span>
@@ -3587,6 +3691,10 @@ save();
 
 }
 
+/* =========================================================
+   NOVÝ OBJEKT
+   ========================================================= */
+
 function newObject(){
 
 openModal(`
@@ -3599,7 +3707,7 @@ openModal(`
 
 ${data.customers.map(c=>
 `<option value="${c.id}">
-${c.name}
+${escapeHtml(c.name)}
 </option>`
 ).join("")}
 
@@ -3664,6 +3772,10 @@ closeModal();
 save();
 
 }
+
+/* =========================================================
+   NOVÉ ZAŘÍZENÍ
+   ========================================================= */
 
 function newDevice(oid){
 
@@ -3789,6 +3901,10 @@ openObject(oid);
 
 }
 
+/* =========================================================
+   STATISTIKY
+   ========================================================= */
+
 function renderStats(){
 
 const os=
@@ -3815,7 +3931,7 @@ os.map(x=>`
 
 <div class="plan">
 
-<span>${x.name}</span>
+<span>${escapeHtml(x.name)}</span>
 
 <b>${x.faults}</b>
 
@@ -3846,7 +3962,7 @@ Object.entries(f)
 
 <div class="plan">
 
-<span>${x[0]}</span>
+<span>${escapeHtml(x[0])}</span>
 
 <b>${x[1]}×</b>
 
@@ -3877,7 +3993,7 @@ Object.entries(s)
 
 <div class="plan">
 
-<span>${x[0]}</span>
+<span>${escapeHtml(x[0])}</span>
 
 <b>${x[1]}</b>
 
@@ -3917,7 +4033,7 @@ Aplikace vezme zařízení a jejich poslední zaznamenané kontroly.
 ${data.objects.map(o=>`
 
 <option value="${o.id}">
-${o.name} — ${customerName(o.customerId)}
+${escapeHtml(o.name)} — ${escapeHtml(customerName(o.customerId))}
 </option>
 
 `).join("")}
@@ -4034,6 +4150,13 @@ const next=
 d.next||
 "—";
 
+const typeLabel=
+typeName(d.type)
+.replace("💧 ","")
+.replace("🧯 ","")
+.replace("❄️ ","")
+.replace("🚒 ","");
+
 const row=`
 
 <tr>
@@ -4042,7 +4165,7 @@ const row=`
 
 <td>${escapeHtml(d.location||"—")}</td>
 
-<td>${escapeHtml(typeName(d.type).replace(/^.{2}/,""))}</td>
+<td>${escapeHtml(typeLabel)}</td>
 
 <td>${escapeHtml(d.maker||"—")}</td>
 
@@ -4370,7 +4493,6 @@ alt="Fotodokumentace zařízení ${escapeHtml(d.id)}"
 
 </div>
 `;
-
 });
 
 if(!photoCount){
@@ -4439,6 +4561,10 @@ return html;
 
 }
 
+/* =========================================================
+   TVORBA PROTOKOLU
+   ========================================================= */
+
 function openReportBuilder(oid){
 
 const object=
@@ -4479,18 +4605,20 @@ Protokol automaticky používá zařízení, jejich kontroly, závady a fotograf
 <label>Firma / jméno / název</label>
 <input
 id="reportOwnerName"
-value="${escapeHtml(customer?.name||"")}"
+value="${escapeHtml(existing?.settings?.ownerName||customer?.name||"")}"
 >
 
 <label>IČO</label>
 <input
 id="reportOwnerIco"
+value="${escapeHtml(existing?.settings?.ownerIco||"")}"
 placeholder="IČO"
 >
 
 <label>Sídlo / místo podnikání / adresa</label>
 <input
 id="reportOwnerAddress"
+value="${escapeHtml(existing?.settings?.ownerAddress||"")}"
 placeholder="Adresa provozovatele"
 >
 
@@ -4499,24 +4627,28 @@ placeholder="Adresa provozovatele"
 <label>Jméno a příjmení</label>
 <input
 id="reportInspectorName"
+value="${escapeHtml(existing?.settings?.inspectorName||"")}"
 placeholder="Jméno a příjmení"
 >
 
 <label>Firma / název</label>
 <input
 id="reportInspectorCompany"
+value="${escapeHtml(existing?.settings?.inspectorCompany||"")}"
 placeholder="Firma"
 >
 
 <label>IČO</label>
 <input
 id="reportInspectorIco"
+value="${escapeHtml(existing?.settings?.inspectorIco||"")}"
 placeholder="IČO"
 >
 
 <label>Sídlo / místo podnikání</label>
 <input
 id="reportInspectorAddress"
+value="${escapeHtml(existing?.settings?.inspectorAddress||"")}"
 placeholder="Adresa firmy"
 >
 
@@ -4545,7 +4677,7 @@ value="${existing?.nextDate||""}"
 <textarea
 id="reportRemovalAction"
 rows="3"
-placeholder="Např. výměna poškozené hadice, oprava nebo předání do údržby...">${existing?.removalAction||""}</textarea>
+placeholder="Např. výměna poškozené hadice, oprava nebo předání do údržby...">${escapeHtml(existing?.settings?.removalAction||"")}</textarea>
 
 <label>Termín odstranění závad</label>
 
@@ -4585,6 +4717,7 @@ data.objects.find(x=>x.id===oid);
 if(!object)return;
 
 const settings={
+
 ownerName:
 document.getElementById("reportOwnerName").value.trim(),
 
@@ -4655,12 +4788,29 @@ html
 
 }
 
+/* =========================================================
+   OPRAVENÝ EDITOR PROTOKOLU
+   ========================================================= */
+
 function openReportEditor(
 reportId,
 object,
 settings,
 html
 ){
+
+currentReportSettings=
+settings||{};
+
+const safeReportId=
+reportId
+?
+String(reportId).replace(/'/g,"\\'")
+:
+"";
+
+const safeObjectId=
+String(object.id).replace(/'/g,"\\'");
 
 openModal(`
 
@@ -4685,9 +4835,8 @@ ${html}
 <button
 class="green"
 onclick="saveReport(
-${reportId?`'${reportId}'`:"null"},
-'${object.id}',
-${JSON.stringify(settings).replace(/"/g,"&quot;")}
+'${safeReportId}',
+'${safeObjectId}'
 )">
 💾 Uložit protokol
 </button>
@@ -4710,56 +4859,106 @@ Zavřít
 
 }
 
+/* =========================================================
+   OPRAVENÉ ULOŽENÍ PROTOKOLU
+   ========================================================= */
+
 function saveReport(
 reportId,
-objectId,
-settings
+objectId
 ){
 
 const editor=
 document.getElementById("reportEditor");
 
-if(!editor)return;
+if(!editor){
+
+alert("Editor protokolu nebyl nalezen.");
+
+return;
+
+}
 
 const html=editor.innerHTML;
 
 const object=
 data.objects.find(x=>x.id===objectId);
 
-if(!object)return;
+if(!object){
+
+alert("Objekt nebyl nalezen.");
+
+return;
+
+}
+
+const settings=
+currentReportSettings||{};
 
 const id=
-reportId||
+reportId&&reportId!=="null"
+?
+reportId
+:
 "REP-"+Date.now();
 
 const report={
+
 id,
+
 objectId,
-objectName:object.name,
-date:settings.date||today(),
-nextDate:settings.nextDate||"",
+
+objectName:
+object.name,
+
+date:
+settings.date||today(),
+
+nextDate:
+settings.nextDate||"",
+
+removalAction:
+settings.removalAction||"",
+
+removalDeadline:
+settings.removalDeadline||"",
+
 settings,
+
 html
+
 };
 
 const index=
-data.reports.findIndex(x=>x.id===id);
+data.reports.findIndex(
+x=>x.id===id
+);
 
-if(index===-1)
+if(index===-1){
+
 data.reports.push(report);
-else
+
+}else{
+
 data.reports[index]=report;
 
+}
+
 closeModal();
+
 save();
 
 alert(
-"Protokol byl uložen."
+"Protokol byl uložen do sekce 📄 Zprávy."
 );
 
 show("reportsScreen");
 
 }
+
+/* =========================================================
+   TISK / PDF
+   ========================================================= */
 
 function printReport(){
 
@@ -4778,6 +4977,10 @@ document.title=oldTitle;
 
 }
 
+/* =========================================================
+   ÚPRAVA ULOŽENÉHO PROTOKOLU
+   ========================================================= */
+
 function editSavedReport(id){
 
 const report=
@@ -4788,18 +4991,31 @@ if(!report)return;
 const object=
 data.objects.find(x=>x.id===report.objectId);
 
-if(!object)return;
+if(!object){
+
+alert("Původní objekt už není v evidenci.");
+
+return;
+
+}
 
 openReportEditor(
 report.id,
 object,
 report.settings||{
-date:report.date
+date:report.date,
+nextDate:report.nextDate||"",
+removalAction:report.removalAction||"",
+removalDeadline:report.removalDeadline||""
 },
 report.html
 );
 
 }
+
+/* =========================================================
+   SMAZÁNÍ PROTOKOLU
+   ========================================================= */
 
 function deleteReport(id){
 
@@ -4815,14 +5031,23 @@ save();
 
 }
 
+/* =========================================================
+   SEZNAM ZPRÁV
+   ========================================================= */
+
 function renderReports(){
 
-if(!document.getElementById("reportsList"))
-return;
+const list=
+document.getElementById("reportsList");
+
+if(!list)return;
+
+if(!Array.isArray(data.reports))
+data.reports=[];
 
 if(!data.reports.length){
 
-reportsList.innerHTML=`
+list.innerHTML=`
 
 <div class="card muted">
 Zatím není uložený žádný protokol.
@@ -4834,7 +5059,7 @@ return;
 
 }
 
-reportsList.innerHTML=
+list.innerHTML=
 data.reports
 .slice()
 .sort((a,b)=>
@@ -4892,6 +5117,10 @@ onclick="deleteReport('${r.id}')">
 
 }
 
+/* =========================================================
+   OTEVŘENÍ ULOŽENÉHO PROTOKOLU
+   ========================================================= */
+
 function openSavedReport(id){
 
 const report=
@@ -4902,18 +5131,31 @@ if(!report)return;
 const object=
 data.objects.find(x=>x.id===report.objectId);
 
-if(!object)return;
+if(!object){
+
+alert("Původní objekt už není v evidenci.");
+
+return;
+
+}
 
 openReportEditor(
 report.id,
 object,
 report.settings||{
-date:report.date
+date:report.date,
+nextDate:report.nextDate||"",
+removalAction:report.removalAction||"",
+removalDeadline:report.removalDeadline||""
 },
 report.html
 );
 
 }
+
+/* =========================================================
+   EXPORT / IMPORT
+   ========================================================= */
 
 function exportData(){
 
@@ -5002,6 +5244,10 @@ reader.readAsText(file);
 
 }
 
+/* =========================================================
+   DEMO RESET
+   ========================================================= */
+
 function resetDemo(){
 
 if(
@@ -5029,6 +5275,10 @@ alert(
 
 }
 
+/* =========================================================
+   MODAL
+   ========================================================= */
+
 function openModal(html){
 
 document.getElementById("sheet")
@@ -5045,6 +5295,10 @@ document.getElementById("modal")
 .classList.remove("open");
 
 }
+
+/* =========================================================
+   START
+   ========================================================= */
 
 render();
 
