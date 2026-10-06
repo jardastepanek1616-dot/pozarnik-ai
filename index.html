@@ -273,7 +273,22 @@ placeholder="ID, výrobní číslo, umístění nebo typ...">
 <script>
 
 const KEY='pozarnik_ai_demo_v08';
+const PLAN_YEAR = new Date().getFullYear();
 
+function campaignForObject(oid){
+  return (data.octoberObjects || []).includes(oid)
+    ? 'october'
+    : 'april';
+}
+
+function objectDone(o, campaign){
+  if(!o.devices || !o.devices.length) return false;
+
+  return o.devices.every(d =>
+    d.planYear === PLAN_YEAR &&
+    d.planCampaign === campaign
+  );
+}
 const faultTypes=[
 'Plomba poškozená',
 'Hadice / hubice',
@@ -1291,6 +1306,9 @@ d.next=next.toISOString().slice(0,10);
 
 d.faults=fault?[fault]:[];
 if(note)d.faults.push(note);
+
+d.planYear=PLAN_YEAR;
+d.planCampaign=campaignForObject(oid);
 
 data.checks.push({
 date:d.last,
